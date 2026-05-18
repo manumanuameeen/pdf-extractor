@@ -22,7 +22,7 @@ This guide outlines the step-by-step instructions to host and launch your **PDF 
    * **Language**: `Node`
    * **Branch**: `main` (or your active branch)
    * **Root Directory**: `backend` *(CRITICAL: Tell Render to run inside the backend folder!)*
-   * **Build Command**: `npm install && npm run build`
+   * **Build Command**: `npm install --production=false && npm run build`
    * **Start Command**: `npm run start`
    * **Instance Type**: **Free** (or any tier of your choice)
 
