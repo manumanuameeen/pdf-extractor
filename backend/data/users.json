@@ -1,0 +1,81 @@
+[
+  {
+    "id": "f7280383-b2db-4981-8e69-d4d449e388db",
+    "name": "ameen",
+    "email": "ameenmanu@gmail.com",
+    "passwordHash": "$2b$12$k8BPDhDEGlC78j2qouOJhueNxc8ziUq7kqM0eJ5JUWJPXIJ0B0Z.C",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-15T16:27:08.201Z"
+  },
+  {
+    "id": "cbe4cfa5-5810-40b6-8e2a-36fd7f0c20ef",
+    "name": "jkjkjk",
+    "email": "ljlklkl@gmail.com",
+    "passwordHash": "$2b$12$klx2Q3sV.fU7u2sFQQxf/.kY2OIHyXHR9Mkud0MzkeJmdO8oW3JDS",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-15T16:57:39.245Z"
+  },
+  {
+    "id": "caf4a4b9-6215-4c0e-95f4-da527c47403e",
+    "name": "asdasd",
+    "email": "asdasda@gmail.com",
+    "passwordHash": "$2b$12$543A2zwEXXnHj/.jsdOoKO5srqVuxiAW7WaL.jVq2FVsnimffFc8u",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-15T17:03:15.019Z",
+    "profilePhotoUrl": "/uploads/4175c829-b31c-4f03-b905-bb56b405315b.png"
+  },
+  {
+    "id": "ab7bb4cd-3d78-4d32-bef4-1c35ba1aa7dc",
+    "name": "ameen",
+    "email": "jerrykerry3806@gmail.com",
+    "passwordHash": "$2b$12$wrLKj4wbfKCg.Ja7cx52ce.i93NUvIEArLGPRGFUhQUu4kGzicaYe",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-16T06:13:15.141Z",
+    "passwordResetOtpHash": "$2b$10$Zk3xOegY/85DkgZ31fXWbeXdj7dQx7.j0mg5XHxgFooUHRMP7fDf2",
+    "passwordResetOtpExpiresAt": "2026-05-16T06:26:10.414Z",
+    "passwordResetOtpAttempts": 0,
+    "passwordResetOtpLastSentAt": "2026-05-16T06:16:10.414Z"
+  },
+  {
+    "id": "2cbaf383-678d-4a6c-a8b9-21e0a3ac0675",
+    "name": "arunjith",
+    "email": "jerrykerry@gmail.com",
+    "passwordHash": "$2b$12$SIHLO75bajv5u5Gr7PB1LOIpe8JC9zLZAtpXMXqpKaglmbygaxoJq",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-18T05:01:14.522Z",
+    "refreshTokenHash": "$2b$12$5n2pt5EVSCzjXCSBF1qsn.TymqoM6iRjnZMVdhMEIaHzL2JpSy0QS",
+    "refreshTokenExpiresAt": "2026-05-25T05:13:41.261Z"
+  },
+  {
+    "id": "c5ddadc3-bc55-4117-887e-ac98aa10b56f",
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "passwordHash": "$2b$12$hJY.UqzW1gya3cD4FZ6uS.Q5siUWuKuVzDO0cydS4U8LPuvqbI82i",
+    "isVerified": false,
+    "otpHash": "$2b$10$ZJZYUwVnOPwzO8B410CigOReMSvLiuy9BWclgT5rvmFQ6JhkNggN.",
+    "otpExpiresAt": "2026-05-18T05:38:29.710Z",
+    "otpAttempts": 0,
+    "otpLastSentAt": "2026-05-18T05:28:29.710Z",
+    "createdAt": "2026-05-18T05:28:29.710Z"
+  }
+]
