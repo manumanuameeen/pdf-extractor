@@ -17,14 +17,15 @@ import { PdfService } from '../services/pdfService.js';
 import { CleanupJob } from '../utils/cleanup.js';
 import { DatabaseConnection } from './database.js';
 import { MulterConfig } from './multer.js';
+import type { IUserRepository, IPdfRepository } from '../contracts/repositories.js';
 
 /**
  * ARCHITECTURE: DI COMPOSITION ROOT
  * Purpose: Build concrete dependencies once and expose fully wired app layers.
  */
 class AppDependencies {
-  readonly userRepository = process.env.MONGODB_URI ? new MongoUserRepository() : new UserRepository();
-  readonly pdfRepository = process.env.MONGODB_URI ? new MongoPdfRepository() : new PdfRepository();
+  readonly userRepository: IUserRepository = process.env.MONGODB_URI ? new MongoUserRepository() : new UserRepository();
+  readonly pdfRepository: IPdfRepository = process.env.MONGODB_URI ? new MongoPdfRepository() : new PdfRepository();
 
   readonly userMapper = new UserMapper();
   readonly pdfMapper = new PdfMapper();
