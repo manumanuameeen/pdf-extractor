@@ -8,6 +8,7 @@ import { SYSTEM_MESSAGES } from '../constants/messages.js';
 export class DatabaseConnection {
     async connect() {
         const uri = process.env[DATABASE.URI_ENV];
+        console.log(uri);
         if (!uri) {
             console.log(SYSTEM_MESSAGES.DATABASE_SKIPPED);
             return;

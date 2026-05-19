@@ -10,7 +10,7 @@ import type { IDatabaseConnection } from '../contracts/config.js';
 export class DatabaseConnection implements IDatabaseConnection {
   async connect(): Promise<void> {
     const uri = process.env[DATABASE.URI_ENV];
-
+console.log(uri)
     if (!uri) {
       console.log(SYSTEM_MESSAGES.DATABASE_SKIPPED);
       return;
