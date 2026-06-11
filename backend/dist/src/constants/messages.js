@@ -1,4 +1,7 @@
-export const AUTH_MESSAGES = {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SYSTEM_MESSAGES = exports.PDF_MESSAGES = exports.AUTH_MESSAGES = void 0;
+exports.AUTH_MESSAGES = {
     NAME_TOO_SHORT: 'Name must be at least 2 characters.',
     INVALID_EMAIL: 'Please enter a valid email address.',
     PASSWORD_TOO_SHORT: 'Password must be at least 8 characters.',
@@ -31,9 +34,10 @@ export const AUTH_MESSAGES = {
     REFRESH_TOKEN_EXPIRED: 'Refresh token expired. Please sign in again.',
     TOKEN_REQUIRED: 'Authorization token is required.',
     INVALID_TOKEN: 'Invalid or expired token.',
-    JWT_SECRET_REQUIRED: 'JWT_SECRET must be configured in production.'
+    JWT_SECRET_REQUIRED: 'JWT_SECRET must be configured in production.',
+    EMAIL_CONFIGURATION_REQUIRED: 'SMTP email configuration is required to send OTP emails.'
 };
-export const PDF_MESSAGES = {
+exports.PDF_MESSAGES = {
     NO_FILE_UPLOADED: 'Please upload a PDF file.',
     INVALID_FILE_TYPE: 'Only PDF files are allowed.',
     PDF_NOT_FOUND_REUPLOAD: 'PDF not found. Please upload it again.',
@@ -44,7 +48,7 @@ export const PDF_MESSAGES = {
     PAGE_INDICES_MUST_BE_WHOLE_NUMBERS: 'Pages must be whole numbers.',
     PAGE_OUT_OF_RANGE: 'Page {page} is outside the PDF page range.'
 };
-export const SYSTEM_MESSAGES = {
+exports.SYSTEM_MESSAGES = {
     UNKNOWN_ERROR: 'Something went wrong.',
     UNKNOWN_PDF_ERROR: 'Unknown PDF processing error',
     PDF_SERVICE_ERROR_PREFIX: 'PDF Service Error',

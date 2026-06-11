@@ -1,5 +1,10 @@
-import mongoose from 'mongoose';
-const { Schema, model, models } = mongoose;
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
+const { Schema, model, models } = mongoose_1.default;
 const userSchema = new Schema({
     _id: { type: String, required: true }, // Store UUID as _id
     name: { type: String, required: true, trim: true, minlength: 2 },
@@ -21,4 +26,4 @@ const userSchema = new Schema({
     timestamps: true,
     versionKey: false
 });
-export default models.User || model('User', userSchema);
+exports.default = models.User || model('User', userSchema);

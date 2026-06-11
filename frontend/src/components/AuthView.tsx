@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import type { AuthMode } from '../types';
 import type { AuthResponse } from '../services/authService';
 import { UI_MESSAGES } from '../constants/messages';
@@ -19,8 +19,23 @@ export function AuthView({ onLogin, onSignup, onVerifyOtp, onResendOtp, showToas
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [otpExpiresInSeconds, setOtpExpiresInSeconds] = useState<number | null>(null);
+  const [resendAvailableInSeconds, setResendAvailableInSeconds] = useState<number | null>(null);
 
   const canVerify = Boolean(pendingEmail);
+
+  useEffect(() => {
+    if (otpExpiresInSeconds === null && resendAvailableInSeconds === null) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setOtpExpiresInSeconds((current) => (current === null ? null : Math.max(0, current - 1)));
+      setResendAvailableInSeconds((current) => (current === null ? null : Math.max(0, current - 1)));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [otpExpiresInSeconds, resendAvailableInSeconds]);
 
   const isEmailValid = (value: string) => /^\S+@\S+\.\S+$/.test(value.trim());
   const isPasswordValid = (value: string) => value.trim().length >= 8;
@@ -104,6 +119,8 @@ export function AuthView({ onLogin, onSignup, onVerifyOtp, onResendOtp, showToas
         setPendingEmail(email);
         setPassword('');
         setOtp('');
+        setOtpExpiresInSeconds(response.otpExpiresInSeconds ?? null);
+        setResendAvailableInSeconds(response.resendAvailableInSeconds ?? null);
         setMode('verify');
         showToast(response.message, 'success');
       }
@@ -130,6 +147,9 @@ export function AuthView({ onLogin, onSignup, onVerifyOtp, onResendOtp, showToas
 
     try {
       const response = await onResendOtp(pendingEmail);
+      setOtp('');
+      setOtpExpiresInSeconds(response.otpExpiresInSeconds ?? null);
+      setResendAvailableInSeconds(response.resendAvailableInSeconds ?? null);
       showToast(response.message, 'success');
     } catch (error) {
       const message = error instanceof Error ? error.message : UI_MESSAGES.RESEND_OTP_FAILED;
@@ -229,6 +249,7 @@ export function AuthView({ onLogin, onSignup, onVerifyOtp, onResendOtp, showToas
         {mode === 'verify' && pendingEmail && (
           <div className="notification-panel">
             Verification code sent to <strong>{pendingEmail}</strong>
+            {otpExpiresInSeconds !== null && <span> Expires in {otpExpiresInSeconds}s.</span>}
           </div>
         )}
 
@@ -237,8 +258,15 @@ export function AuthView({ onLogin, onSignup, onVerifyOtp, onResendOtp, showToas
             {isLoading ? 'Processing...' : submitLabel}
           </button>
           {mode === 'verify' && (
-            <button className="btn-secondary" type="button" onClick={handleResend} disabled={isLoading}>
-              Resend OTP
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={handleResend}
+              disabled={isLoading || Boolean(resendAvailableInSeconds && resendAvailableInSeconds > 0)}
+            >
+              {resendAvailableInSeconds && resendAvailableInSeconds > 0
+                ? `Resend OTP in ${resendAvailableInSeconds}s`
+                : 'Resend OTP'}
             </button>
           )}
         </div>

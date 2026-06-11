@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { SignOptions } from 'jsonwebtoken';
-import { AUTH_LIMITS } from '../constants/config.js';
+import { AUTH_LIMITS, OTP_TIMING } from '../constants/config.js';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import type { IUserMapper } from '../contracts/mappers.js';
 import type { IUserRepository } from '../contracts/repositories.js';
@@ -61,7 +61,8 @@ export class AuthService implements IAuthService {
         ? AUTH_MESSAGES.SIGNUP_OTP_SENT
         : AUTH_MESSAGES.SIGNUP_DEV_OTP,
       user: this._mapper.toPublicUser(user),
-      devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined
+      devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+      ...this.getOtpTimingResponse(user.otpLastSentAt)
     };
   }
 
@@ -129,11 +130,11 @@ export class AuthService implements IAuthService {
     if (user.otpLastSentAt) {
       const secondsSinceLastSend = (Date.now() - new Date(user.otpLastSentAt).getTime()) / 1000;
 
-      if (secondsSinceLastSend < AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS) {
+      if (secondsSinceLastSend < OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS) {
         throw new Error(
           AUTH_MESSAGES.RESEND_COOLDOWN.replace(
             '{seconds}',
-            String(Math.ceil(AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS - secondsSinceLastSend))
+            String(Math.ceil(OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS - secondsSinceLastSend))
           )
         );
       }
@@ -153,7 +154,8 @@ export class AuthService implements IAuthService {
         ? AUTH_MESSAGES.RESEND_OTP_SENT
         : AUTH_MESSAGES.RESEND_DEV_OTP,
       user: this._mapper.toPublicUser(user),
-      devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined
+      devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+      ...this.getOtpTimingResponse(user.otpLastSentAt)
     };
   }
 
@@ -213,11 +215,11 @@ export class AuthService implements IAuthService {
     if (user.passwordResetOtpLastSentAt) {
       const secondsSinceLastSend = (Date.now() - new Date(user.passwordResetOtpLastSentAt).getTime()) / 1000;
 
-      if (secondsSinceLastSend < AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS) {
+      if (secondsSinceLastSend < OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS) {
         throw new Error(
           AUTH_MESSAGES.RESEND_COOLDOWN.replace(
             '{seconds}',
-            String(Math.ceil(AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS - secondsSinceLastSend))
+            String(Math.ceil(OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS - secondsSinceLastSend))
           )
         );
       }
@@ -235,7 +237,8 @@ export class AuthService implements IAuthService {
     return {
       message: emailResult.delivered ? AUTH_MESSAGES.RESET_OTP_SENT : AUTH_MESSAGES.RESET_DEV_OTP,
       user: this._mapper.toPublicUser(user),
-      devResetOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined
+      devResetOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+      ...this.getOtpTimingResponse(user.passwordResetOtpLastSentAt)
     };
   }
 
@@ -373,5 +376,20 @@ export class AuthService implements IAuthService {
   private generateOtp(): string {
     return crypto.randomInt(AUTH_LIMITS.OTP_MIN, AUTH_LIMITS.OTP_MAX).toString();
   }
-}
 
+  private getOtpTimingResponse(sentAt: string | null | undefined): Pick<AuthResponse, 'otpExpiresInSeconds' | 'resendAvailableInSeconds'> {
+    if (!sentAt) {
+      return {
+        otpExpiresInSeconds: OTP_TIMING.EXPIRY_SECONDS,
+        resendAvailableInSeconds: OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS
+      };
+    }
+
+    const secondsSinceSend = Math.max(0, Math.floor((Date.now() - new Date(sentAt).getTime()) / 1000));
+
+    return {
+      otpExpiresInSeconds: Math.max(0, OTP_TIMING.EXPIRY_SECONDS - secondsSinceSend),
+      resendAvailableInSeconds: Math.max(0, OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS - secondsSinceSend)
+    };
+  }
+}

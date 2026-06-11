@@ -1,4 +1,11 @@
-export const STORAGE = {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CLEANUP = exports.DATABASE = exports.SMTP_DEFAULTS = exports.FILE_LIMITS = exports.OTP_TIMING = exports.AUTH_LIMITS = exports.STORAGE = void 0;
+const readPositiveInteger = (value, fallback) => {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+exports.STORAGE = {
     UPLOAD_DIR_ENV: 'UPLOAD_DIR',
     OUTPUT_DIR_ENV: 'OUTPUT_DIR',
     DEFAULT_UPLOAD_DIR: 'uploads',
@@ -7,13 +14,12 @@ export const STORAGE = {
     PDF_EXTENSION: '.pdf',
     EXTRACTED_SUFFIX: '-extracted.pdf'
 };
-export const AUTH_LIMITS = {
+exports.AUTH_LIMITS = {
     MIN_NAME_LENGTH: 2,
     MIN_PASSWORD_LENGTH: 8,
     OTP_MIN: 100000,
     OTP_MAX: 999999,
-    OTP_EXPIRY_MINUTES: 10,
-    OTP_RESEND_COOLDOWN_SECONDS: 60,
+    OTP_EXPIRY_MINUTES: readPositiveInteger(process.env.OTP_EXPIRY_MINUTES, 10),
     MAX_OTP_ATTEMPTS: 5,
     BCRYPT_PASSWORD_ROUNDS: 12,
     BCRYPT_OTP_ROUNDS: 10,
@@ -21,20 +27,24 @@ export const AUTH_LIMITS = {
     DEFAULT_JWT_EXPIRES_IN: '7d',
     REFRESH_TOKEN_EXPIRY_DAYS: 7
 };
-export const FILE_LIMITS = {
+exports.OTP_TIMING = {
+    EXPIRY_SECONDS: exports.AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60,
+    RESEND_AVAILABLE_AFTER_SECONDS: Math.ceil((exports.AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60) / 2)
+};
+exports.FILE_LIMITS = {
     MAX_PDF_SIZE_BYTES: 50 * 1024 * 1024
 };
-export const SMTP_DEFAULTS = {
+exports.SMTP_DEFAULTS = {
     PORT: 587,
     SECURE_PORT: 465,
     SUBJECT: 'Verify your PDF Extractor account'
 };
-export const DATABASE = {
+exports.DATABASE = {
     URI_ENV: 'MONGODB_URI',
     DB_NAME_ENV: 'MONGODB_DB_NAME',
     DEFAULT_DB_NAME: 'pdf_extractor'
 };
-export const CLEANUP = {
+exports.CLEANUP = {
     DEFAULT_INTERVAL_MINUTES: 60,
     CRON_EVERY_HOUR: '0 * * * *'
 };

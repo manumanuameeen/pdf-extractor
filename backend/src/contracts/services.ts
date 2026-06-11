@@ -18,6 +18,8 @@ export type AuthResponse = {
   refreshToken?: string;
   devOtp?: string;
   devResetOtp?: string;
+  otpExpiresInSeconds?: number;
+  resendAvailableInSeconds?: number;
 };
 
 export type PdfMetadata = {

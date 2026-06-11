@@ -1,5 +1,10 @@
-import mongoose from 'mongoose';
-const { Schema, model, models } = mongoose;
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
+const { Schema, model, models } = mongoose_1.default;
 const pdfSchema = new Schema({
     _id: { type: String, required: true }, // Store UUID/Filename as _id
     userId: { type: String, required: true, index: true }, // Store user's UUID as String
@@ -11,4 +16,4 @@ const pdfSchema = new Schema({
     timestamps: true,
     versionKey: false
 });
-export default models.Pdf || model('Pdf', pdfSchema);
+exports.default = models.Pdf || model('Pdf', pdfSchema);

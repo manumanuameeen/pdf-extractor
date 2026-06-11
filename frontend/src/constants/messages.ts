@@ -12,12 +12,4 @@ export const UI_MESSAGES = {
   SELECT_PAGE_FIRST: 'Select at least one page first.',
   EXTRACTION_SUCCESS: 'New PDF created. Download is ready.',
   EXTRACTION_FAILED: 'Extraction failed.',
-  OTP_SENT: 'OTP sent to your email. Check your inbox and wait 60 seconds before requesting again.',
-  RESEND_OTP_WAIT: 'Resend OTP available in {seconds} seconds.',
-  FORGOT_PASSWORD_FAILED: 'Forgot password request failed.',
-  RESET_PASSWORD_FAILED: 'Password reset failed.',
-  PROFILE_UPDATE_FAILED: 'Could not update profile.',
-  CHANGE_PASSWORD_FAILED: 'Could not change password.',
-  UNAUTHORIZED: 'You must be signed in to perform this action.',
-  PASSWORD_HIDDEN: 'Your password is never shown on screen for security.',
 } as const;
