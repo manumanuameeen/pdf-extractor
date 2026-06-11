@@ -137,5 +137,17 @@
     "otpAttempts": 0,
     "otpLastSentAt": "2026-05-22T06:50:06.010Z",
     "createdAt": "2026-05-22T06:50:06.010Z"
+  },
+  {
+    "id": "96591b0d-6dc2-4340-826c-5b129e1e0e07",
+    "name": "abisinan",
+    "email": "work.ameenmanu@gmail.com",
+    "passwordHash": "$2b$12$z9ksaBzdskNJ3zM5EZpVfuM3chg4Q6HY3E29G.J5YmNAaAZtrvREa",
+    "isVerified": false,
+    "otpHash": "$2b$10$ucvZ2gG1WxMm0pSAF9KfC.OT4QZuJVAV2ySIPmKKSJowSkUR7SIZC",
+    "otpExpiresAt": "2026-06-11T10:19:31.231Z",
+    "otpAttempts": 0,
+    "otpLastSentAt": "2026-06-11T10:09:31.231Z",
+    "createdAt": "2026-06-11T10:09:31.231Z"
   }
 ]

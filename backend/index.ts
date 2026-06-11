@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import app from './src/app';
 import { SYSTEM_MESSAGES } from './src/constants/messages';
 
@@ -7,7 +7,6 @@ import { SYSTEM_MESSAGES } from './src/constants/messages';
  * Purpose: Load environment variables and start the HTTP server.
  */
 
-dotenv.config();
 
 const PORT = Number(process.env.PORT) || 5000;
 
