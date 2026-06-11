@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: pdf-extractor-backend
+    env: node
+    rootDir: backend
+    buildCommand: rm -rf node_modules && npm ci && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    plan: starter
+    cacheDirectories: []
