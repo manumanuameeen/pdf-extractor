@@ -14,7 +14,6 @@ const messages_js_1 = require("../constants/messages.js");
 class DatabaseConnection {
     async connect() {
         const uri = process.env[config_js_1.DATABASE.URI_ENV];
-        console.log(uri);
         if (!uri) {
             console.log(messages_js_1.SYSTEM_MESSAGES.DATABASE_SKIPPED);
             return;
