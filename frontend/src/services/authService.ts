@@ -8,6 +8,9 @@ export type AuthResponse = {
   token?: string;
   refreshToken?: string;
   devOtp?: string;
+  devResetOtp?: string;
+  otpExpiresInSeconds?: number;
+  resendAvailableInSeconds?: number;
 };
 
 function setSession(token: string, refreshToken?: string) {

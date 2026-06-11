@@ -1,11 +1,13 @@
-import 'dotenv/config';
-import app from './src/app.js';
-import { SYSTEM_MESSAGES } from './src/constants/messages.js';
+import dotenv from 'dotenv';
+import app from './src/app';
+import { SYSTEM_MESSAGES } from './src/constants/messages';
 
 /**
  * ARCHITECTURE: ENTRY POINT
  * Purpose: Load environment variables and start the HTTP server.
  */
+
+dotenv.config();
 
 const PORT = Number(process.env.PORT) || 5000;
 

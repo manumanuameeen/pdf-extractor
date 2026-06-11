@@ -31,7 +31,8 @@ export const AUTH_MESSAGES = {
   REFRESH_TOKEN_EXPIRED: 'Refresh token expired. Please sign in again.',
   TOKEN_REQUIRED: 'Authorization token is required.',
   INVALID_TOKEN: 'Invalid or expired token.',
-  JWT_SECRET_REQUIRED: 'JWT_SECRET must be configured in production.'
+  JWT_SECRET_REQUIRED: 'JWT_SECRET must be configured in production.',
+  EMAIL_CONFIGURATION_REQUIRED: 'SMTP email configuration is required to send OTP emails.'
 } as const;
 
 export const PDF_MESSAGES = {

@@ -1,31 +1,38 @@
-import mongoose from 'mongoose';
-import { DATABASE } from '../constants/config.js';
-import { SYSTEM_MESSAGES } from '../constants/messages.js';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DatabaseConnection = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const config_js_1 = require("../constants/config.js");
+const messages_js_1 = require("../constants/messages.js");
 /**
  * ARCHITECTURE: DATABASE CONFIG CLASS
  * Purpose: Own MongoDB connection setup without coupling repositories to startup code.
  */
-export class DatabaseConnection {
+class DatabaseConnection {
     async connect() {
-        const uri = process.env[DATABASE.URI_ENV];
+        const uri = process.env[config_js_1.DATABASE.URI_ENV];
         console.log(uri);
         if (!uri) {
-            console.log(SYSTEM_MESSAGES.DATABASE_SKIPPED);
+            console.log(messages_js_1.SYSTEM_MESSAGES.DATABASE_SKIPPED);
             return;
         }
         try {
-            await mongoose.connect(uri, {
-                dbName: process.env[DATABASE.DB_NAME_ENV] || DATABASE.DEFAULT_DB_NAME
+            await mongoose_1.default.connect(uri, {
+                dbName: process.env[config_js_1.DATABASE.DB_NAME_ENV] || config_js_1.DATABASE.DEFAULT_DB_NAME
             });
-            console.log(SYSTEM_MESSAGES.DATABASE_CONNECTED);
+            console.log(messages_js_1.SYSTEM_MESSAGES.DATABASE_CONNECTED);
         }
         catch (error) {
-            const message = error instanceof Error ? error.message : SYSTEM_MESSAGES.UNKNOWN_ERROR;
-            console.error(`${SYSTEM_MESSAGES.DATABASE_CONNECTION_FAILED_PREFIX}: ${message}`);
+            const message = error instanceof Error ? error.message : messages_js_1.SYSTEM_MESSAGES.UNKNOWN_ERROR;
+            console.error(`${messages_js_1.SYSTEM_MESSAGES.DATABASE_CONNECTION_FAILED_PREFIX}: ${message}`);
             if (typeof message === 'string' && /ip|whitelist|access|not authorized/i.test(message)) {
                 console.error('Please verify your MongoDB Atlas network access, IP whitelist, cluster credentials, or clear MONGODB_URI to use local JSON storage.');
             }
         }
     }
 }
-export default new DatabaseConnection();
+exports.DatabaseConnection = DatabaseConnection;
+exports.default = new DatabaseConnection();

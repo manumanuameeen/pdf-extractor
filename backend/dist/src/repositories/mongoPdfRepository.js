@@ -1,5 +1,11 @@
-import Pdf from '../models/pdfModel.js';
-export class MongoPdfRepository {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MongoPdfRepository = void 0;
+const pdfModel_js_1 = __importDefault(require("../models/pdfModel.js"));
+class MongoPdfRepository {
     mapToPdfRecord(doc) {
         return {
             id: doc._id,
@@ -12,15 +18,15 @@ export class MongoPdfRepository {
         };
     }
     async findAll() {
-        const docs = await Pdf.find({});
+        const docs = await pdfModel_js_1.default.find({});
         return docs.map((doc) => this.mapToPdfRecord(doc));
     }
     async findById(id) {
-        const doc = await Pdf.findById(id);
+        const doc = await pdfModel_js_1.default.findById(id);
         return doc ? this.mapToPdfRecord(doc) : null;
     }
     async findOwnedByUser(id, userId) {
-        const doc = await Pdf.findOne({ _id: id, userId });
+        const doc = await pdfModel_js_1.default.findOne({ _id: id, userId });
         return doc ? this.mapToPdfRecord(doc) : null;
     }
     async save(record) {
@@ -32,7 +38,8 @@ export class MongoPdfRepository {
             pageCount: record.pageCount,
             path: record.path
         };
-        await Pdf.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
+        await pdfModel_js_1.default.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
         return record;
     }
 }
+exports.MongoPdfRepository = MongoPdfRepository;

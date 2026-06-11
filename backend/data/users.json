@@ -77,5 +77,65 @@
     "otpAttempts": 0,
     "otpLastSentAt": "2026-05-18T05:28:29.710Z",
     "createdAt": "2026-05-18T05:28:29.710Z"
+  },
+  {
+    "id": "cdd9b0cf-46a9-476f-9f79-b0439bdbf219",
+    "name": "Test",
+    "email": "test@test.com",
+    "passwordHash": "$2b$12$UuxMyuLpLZ3n/kNemjA.3uk3RYjO15fwkdgIPno08k8Ef0TfgvxTm",
+    "isVerified": false,
+    "otpHash": "$2b$10$tG2lRpasZpn6rpM76quOPO41It0Cv1Jo0aobnBu4NmV/GKvnMdXMe",
+    "otpExpiresAt": "2026-05-22T05:53:22.462Z",
+    "otpAttempts": 0,
+    "otpLastSentAt": "2026-05-22T05:43:22.462Z",
+    "createdAt": "2026-05-22T05:43:22.462Z"
+  },
+  {
+    "id": "6fbe15b9-8c2e-469b-a2c5-6d34ec644309",
+    "name": "OTP Test",
+    "email": "otptest@test.com",
+    "passwordHash": "$2b$12$y6nUhHDlYuszy8GgWy5MMOXZnEf1cMqtZbhse4yy2PMh36xKzgTFa",
+    "isVerified": false,
+    "otpHash": "$2b$10$ru5MutJr3ExiKw08sNQDM..a4vM6AbR4lb2wFWIijaWX4qFHZ4Fz6",
+    "otpExpiresAt": "2026-05-22T06:12:51.080Z",
+    "otpAttempts": 0,
+    "otpLastSentAt": "2026-05-22T06:11:51.080Z",
+    "createdAt": "2026-05-22T06:11:51.080Z"
+  },
+  {
+    "id": "81de3ea1-3e16-413a-bcce-27601af33b4a",
+    "name": "ameen",
+    "email": "ameen@gmail.com",
+    "passwordHash": "$2b$12$Sg7fmOCtPI.5o79TDiSxseqhZI8hydvmkcSqWIkJxWjFFRPJkBXwy",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-22T06:19:28.523Z"
+  },
+  {
+    "id": "71f7bcc4-e9e2-4b5b-a600-5dd0b36df149",
+    "name": "amen",
+    "email": "domefe9954@nuitx.com",
+    "passwordHash": "$2b$12$NWPXoBdCJ0utjqAifWJg9.s9AniNptBG.XoYsMvqHhBLrIjh.m6Aq",
+    "isVerified": true,
+    "otpHash": null,
+    "otpExpiresAt": null,
+    "otpAttempts": 0,
+    "otpLastSentAt": null,
+    "createdAt": "2026-05-22T06:36:25.168Z"
+  },
+  {
+    "id": "f156633c-9969-4697-892c-c1df87b1b5a3",
+    "name": "amen",
+    "email": "john@example.com",
+    "passwordHash": "$2b$12$ZKFeU8xs/adjhbXwc83azuV9.np96fkZOZ/5ekM5DG4wmXQq6srk.",
+    "isVerified": false,
+    "otpHash": "$2b$10$PzECrp3deN40TmYRlOmgDu3u9mxd178RF1KcUbKDlDTA5jV3abAta",
+    "otpExpiresAt": "2026-05-22T06:51:06.010Z",
+    "otpAttempts": 0,
+    "otpLastSentAt": "2026-05-22T06:50:06.010Z",
+    "createdAt": "2026-05-22T06:50:06.010Z"
   }
 ]

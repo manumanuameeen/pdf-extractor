@@ -1,11 +1,17 @@
-import 'dotenv/config';
-import app from './src/app.js';
-import { SYSTEM_MESSAGES } from './src/constants/messages.js';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+const app_1 = __importDefault(require("./src/app"));
+const messages_1 = require("./src/constants/messages");
 /**
  * ARCHITECTURE: ENTRY POINT
  * Purpose: Load environment variables and start the HTTP server.
  */
+dotenv_1.default.config();
 const PORT = Number(process.env.PORT) || 5000;
-app.listen(PORT, () => {
-    console.log(SYSTEM_MESSAGES.SERVER_STARTED.replace('{port}', String(PORT)));
+app_1.default.listen(PORT, () => {
+    console.log(messages_1.SYSTEM_MESSAGES.SERVER_STARTED.replace('{port}', String(PORT)));
 });

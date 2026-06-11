@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { PDFDocument } from 'pdf-lib';
-import pdfService from '../src/services/pdfService.js';
+import pdfService from '../src/services/pdfService';
 
 const createSamplePdf = async (): Promise<string> => {
   const pdf = await PDFDocument.create();

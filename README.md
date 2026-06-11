@@ -5,9 +5,9 @@ A full-stack PDF manipulation app with authentication. Users sign up, verify ema
 ## Tech Stack
 
 - Frontend: React, Vite, TypeScript, Vanilla CSS, Framer Motion, PDF.js, Lucide React
-- Backend: Node.js, Express, TypeScript, ES Modules, Multer, PDF-lib, Node Cron
+- Backend: Node.js, Express, TypeScript, Multer, PDF-lib, Node Cron
 - Auth: JWT, bcrypt password hashing, OTP email verification with Nodemailer
-- Storage: Local file system plus JSON records for users and PDF ownership, with optional MongoDB/Mongoose setup and models
+- Storage: Local file system plus JSON records for users and PDF ownership
 - Tests: Node built-in test runner for backend PDF extraction logic
 
 ## Architecture
@@ -16,11 +16,9 @@ The backend follows a clean layered flow:
 
 - `routes`: maps REST endpoints to controller functions.
 - `controllers`: validates HTTP input and shapes HTTP responses.
-- `contracts`: defines repository, service, validator, and mapper abstractions.
-- `config/dependencies.ts`: central DI composition root that wires concrete classes to abstractions.
 - `services`: contains auth, email, and PDF business logic.
 - `constants`: keeps route paths, status codes, messages, storage names, and limits in one place.
-- `repositories`: implements repository contracts for user and PDF persistence.
+- `repositories`: stores users and PDF ownership records in JSON files.
 - `middleware`: verifies JWT tokens before protected routes.
 - `config`: keeps upload/storage middleware setup.
 - `utils`: contains background cleanup jobs.
@@ -32,8 +30,6 @@ Auth flow:
 - Backend generates a 6-digit OTP, hashes it, stores expiry/attempt data, and sends it by email.
 - User verifies OTP.
 - Backend marks account verified and returns a JWT token.
-- If a user forgets their password, backend sends a password reset OTP.
-- User submits email, reset OTP, and new password.
 - Frontend stores the token in `localStorage`.
 - Protected PDF APIs require `Authorization: Bearer <token>`.
 - Uploaded PDFs are saved with the logged-in user's `userId`.
@@ -85,8 +81,6 @@ OUTPUT_DIR=outputs
 CLEANUP_INTERVAL_MINUTES=60
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=7d
-MONGODB_URI=
-MONGODB_DB_NAME=pdf_extractor
 SMTP_HOST=
 SMTP_PORT=587
 SMTP_USER=
@@ -125,16 +119,6 @@ VITE_API_URL=http://localhost:5000
 
 - Body: `{ "email": "user@example.com", "password": "password123" }`
 - Returns JWT token for verified users.
-
-`POST /api/auth/forgot-password`
-
-- Body: `{ "email": "user@example.com" }`
-- Sends a password reset OTP.
-
-`POST /api/auth/reset-password`
-
-- Body: `{ "email": "user@example.com", "otp": "123456", "password": "newpassword123" }`
-- Resets the password after OTP validation.
 
 `GET /api/auth/me`
 

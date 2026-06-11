@@ -1,9 +1,15 @@
-import crypto from 'node:crypto';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { AUTH_LIMITS } from '../constants/config.js';
-import { AUTH_MESSAGES } from '../constants/messages.js';
-export class AuthService {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthService = void 0;
+const node_crypto_1 = __importDefault(require("node:crypto"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const config_js_1 = require("../constants/config.js");
+const messages_js_1 = require("../constants/messages.js");
+class AuthService {
     _repository;
     _emailSender;
     _mapper;
@@ -15,15 +21,15 @@ export class AuthService {
     async signup(input) {
         const existingUser = await this._repository.findByEmail(input.email);
         if (existingUser?.isVerified) {
-            throw new Error(AUTH_MESSAGES.EMAIL_EXISTS);
+            throw new Error(messages_js_1.AUTH_MESSAGES.EMAIL_EXISTS);
         }
         const otp = this.generateOtp();
-        const otpHash = await bcrypt.hash(otp, AUTH_LIMITS.BCRYPT_OTP_ROUNDS);
-        const passwordHash = await bcrypt.hash(input.password, AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
+        const otpHash = await bcryptjs_1.default.hash(otp, config_js_1.AUTH_LIMITS.BCRYPT_OTP_ROUNDS);
+        const passwordHash = await bcryptjs_1.default.hash(input.password, config_js_1.AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
         const now = new Date();
-        const otpExpiresAt = new Date(now.getTime() + AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
+        const otpExpiresAt = new Date(now.getTime() + config_js_1.AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
         const user = {
-            id: existingUser?.id || crypto.randomUUID(),
+            id: existingUser?.id || node_crypto_1.default.randomUUID(),
             name: input.name,
             email: input.email,
             passwordHash,
@@ -38,38 +44,39 @@ export class AuthService {
         const emailResult = await this._emailSender.sendOtp(input.email, otp);
         return {
             message: emailResult.delivered
-                ? AUTH_MESSAGES.SIGNUP_OTP_SENT
-                : AUTH_MESSAGES.SIGNUP_DEV_OTP,
+                ? messages_js_1.AUTH_MESSAGES.SIGNUP_OTP_SENT
+                : messages_js_1.AUTH_MESSAGES.SIGNUP_DEV_OTP,
             user: this._mapper.toPublicUser(user),
-            devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined
+            devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+            ...this.getOtpTimingResponse(user.otpLastSentAt)
         };
     }
     async verifyOtp(input) {
         const user = await this._repository.findByEmail(input.email);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
         }
         if (user.isVerified) {
             return {
-                message: AUTH_MESSAGES.ACCOUNT_ALREADY_VERIFIED,
+                message: messages_js_1.AUTH_MESSAGES.ACCOUNT_ALREADY_VERIFIED,
                 user: this._mapper.toPublicUser(user),
                 token: this.signToken(user)
             };
         }
         if (!user.otpHash || !user.otpExpiresAt) {
-            throw new Error(AUTH_MESSAGES.NO_ACTIVE_OTP);
+            throw new Error(messages_js_1.AUTH_MESSAGES.NO_ACTIVE_OTP);
         }
         if (new Date(user.otpExpiresAt).getTime() < Date.now()) {
-            throw new Error(AUTH_MESSAGES.OTP_EXPIRED);
+            throw new Error(messages_js_1.AUTH_MESSAGES.OTP_EXPIRED);
         }
-        if (user.otpAttempts >= AUTH_LIMITS.MAX_OTP_ATTEMPTS) {
-            throw new Error(AUTH_MESSAGES.TOO_MANY_OTP_ATTEMPTS);
+        if (user.otpAttempts >= config_js_1.AUTH_LIMITS.MAX_OTP_ATTEMPTS) {
+            throw new Error(messages_js_1.AUTH_MESSAGES.TOO_MANY_OTP_ATTEMPTS);
         }
-        const isOtpValid = await bcrypt.compare(input.otp, user.otpHash);
+        const isOtpValid = await bcryptjs_1.default.compare(input.otp, user.otpHash);
         if (!isOtpValid) {
             user.otpAttempts += 1;
             await this._repository.save(user);
-            throw new Error(`${AUTH_MESSAGES.INVALID_OTP} ${AUTH_LIMITS.MAX_OTP_ATTEMPTS - user.otpAttempts} attempts left.`);
+            throw new Error(`${messages_js_1.AUTH_MESSAGES.INVALID_OTP} ${config_js_1.AUTH_LIMITS.MAX_OTP_ATTEMPTS - user.otpAttempts} attempts left.`);
         }
         user.isVerified = true;
         user.otpHash = null;
@@ -78,7 +85,7 @@ export class AuthService {
         user.otpLastSentAt = null;
         await this._repository.save(user);
         return {
-            message: AUTH_MESSAGES.ACCOUNT_VERIFIED,
+            message: messages_js_1.AUTH_MESSAGES.ACCOUNT_VERIFIED,
             user: this._mapper.toPublicUser(user),
             token: this.signToken(user),
             refreshToken: await this.createRefreshToken(user)
@@ -87,46 +94,47 @@ export class AuthService {
     async resendOtp(input) {
         const user = await this._repository.findByEmail(input.email);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
         }
         if (user.isVerified) {
-            throw new Error(AUTH_MESSAGES.ACCOUNT_ALREADY_VERIFIED);
+            throw new Error(messages_js_1.AUTH_MESSAGES.ACCOUNT_ALREADY_VERIFIED);
         }
         if (user.otpLastSentAt) {
             const secondsSinceLastSend = (Date.now() - new Date(user.otpLastSentAt).getTime()) / 1000;
-            if (secondsSinceLastSend < AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS) {
-                throw new Error(AUTH_MESSAGES.RESEND_COOLDOWN.replace('{seconds}', String(Math.ceil(AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS - secondsSinceLastSend))));
+            if (secondsSinceLastSend < config_js_1.OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS) {
+                throw new Error(messages_js_1.AUTH_MESSAGES.RESEND_COOLDOWN.replace('{seconds}', String(Math.ceil(config_js_1.OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS - secondsSinceLastSend))));
             }
         }
         const otp = this.generateOtp();
-        user.otpHash = await bcrypt.hash(otp, AUTH_LIMITS.BCRYPT_OTP_ROUNDS);
-        user.otpExpiresAt = new Date(Date.now() + AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
+        user.otpHash = await bcryptjs_1.default.hash(otp, config_js_1.AUTH_LIMITS.BCRYPT_OTP_ROUNDS);
+        user.otpExpiresAt = new Date(Date.now() + config_js_1.AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
         user.otpAttempts = 0;
         user.otpLastSentAt = new Date().toISOString();
         await this._repository.save(user);
         const emailResult = await this._emailSender.sendOtp(input.email, otp);
         return {
             message: emailResult.delivered
-                ? AUTH_MESSAGES.RESEND_OTP_SENT
-                : AUTH_MESSAGES.RESEND_DEV_OTP,
+                ? messages_js_1.AUTH_MESSAGES.RESEND_OTP_SENT
+                : messages_js_1.AUTH_MESSAGES.RESEND_DEV_OTP,
             user: this._mapper.toPublicUser(user),
-            devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined
+            devOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+            ...this.getOtpTimingResponse(user.otpLastSentAt)
         };
     }
     async login(input) {
         const user = await this._repository.findByEmail(input.email);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
+            throw new Error(messages_js_1.AUTH_MESSAGES.INVALID_CREDENTIALS);
         }
-        const isPasswordValid = await bcrypt.compare(input.password, user.passwordHash);
+        const isPasswordValid = await bcryptjs_1.default.compare(input.password, user.passwordHash);
         if (!isPasswordValid) {
-            throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
+            throw new Error(messages_js_1.AUTH_MESSAGES.INVALID_CREDENTIALS);
         }
         if (!user.isVerified) {
-            throw new Error(AUTH_MESSAGES.VERIFY_BEFORE_LOGIN);
+            throw new Error(messages_js_1.AUTH_MESSAGES.VERIFY_BEFORE_LOGIN);
         }
         return {
-            message: AUTH_MESSAGES.LOGIN_SUCCESS,
+            message: messages_js_1.AUTH_MESSAGES.LOGIN_SUCCESS,
             user: this._mapper.toPublicUser(user),
             token: this.signToken(user),
             refreshToken: await this.createRefreshToken(user)
@@ -135,14 +143,14 @@ export class AuthService {
     async refreshToken(input) {
         const user = await this._repository.findByRefreshToken(input.refreshToken);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.INVALID_REFRESH_TOKEN);
+            throw new Error(messages_js_1.AUTH_MESSAGES.INVALID_REFRESH_TOKEN);
         }
         if (!user.refreshTokenExpiresAt || new Date(user.refreshTokenExpiresAt).getTime() < Date.now()) {
-            throw new Error(AUTH_MESSAGES.REFRESH_TOKEN_EXPIRED);
+            throw new Error(messages_js_1.AUTH_MESSAGES.REFRESH_TOKEN_EXPIRED);
         }
         const refreshToken = await this.createRefreshToken(user);
         return {
-            message: AUTH_MESSAGES.REFRESH_TOKEN_SUCCESS,
+            message: messages_js_1.AUTH_MESSAGES.REFRESH_TOKEN_SUCCESS,
             user: this._mapper.toPublicUser(user),
             token: this.signToken(user),
             refreshToken
@@ -151,63 +159,64 @@ export class AuthService {
     async forgotPassword(input) {
         const user = await this._repository.findByEmail(input.email);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
         }
         if (user.passwordResetOtpLastSentAt) {
             const secondsSinceLastSend = (Date.now() - new Date(user.passwordResetOtpLastSentAt).getTime()) / 1000;
-            if (secondsSinceLastSend < AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS) {
-                throw new Error(AUTH_MESSAGES.RESEND_COOLDOWN.replace('{seconds}', String(Math.ceil(AUTH_LIMITS.OTP_RESEND_COOLDOWN_SECONDS - secondsSinceLastSend))));
+            if (secondsSinceLastSend < config_js_1.OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS) {
+                throw new Error(messages_js_1.AUTH_MESSAGES.RESEND_COOLDOWN.replace('{seconds}', String(Math.ceil(config_js_1.OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS - secondsSinceLastSend))));
             }
         }
         const otp = this.generateOtp();
-        user.passwordResetOtpHash = await bcrypt.hash(otp, AUTH_LIMITS.BCRYPT_OTP_ROUNDS);
-        user.passwordResetOtpExpiresAt = new Date(Date.now() + AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
+        user.passwordResetOtpHash = await bcryptjs_1.default.hash(otp, config_js_1.AUTH_LIMITS.BCRYPT_OTP_ROUNDS);
+        user.passwordResetOtpExpiresAt = new Date(Date.now() + config_js_1.AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
         user.passwordResetOtpAttempts = 0;
         user.passwordResetOtpLastSentAt = new Date().toISOString();
         await this._repository.save(user);
         const emailResult = await this._emailSender.sendPasswordResetOtp(input.email, otp);
         return {
-            message: emailResult.delivered ? AUTH_MESSAGES.RESET_OTP_SENT : AUTH_MESSAGES.RESET_DEV_OTP,
+            message: emailResult.delivered ? messages_js_1.AUTH_MESSAGES.RESET_OTP_SENT : messages_js_1.AUTH_MESSAGES.RESET_DEV_OTP,
             user: this._mapper.toPublicUser(user),
-            devResetOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined
+            devResetOtp: emailResult.devMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+            ...this.getOtpTimingResponse(user.passwordResetOtpLastSentAt)
         };
     }
     async resetPassword(input) {
         const user = await this._repository.findByEmail(input.email);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.ACCOUNT_NOT_FOUND);
         }
         if (!user.passwordResetOtpHash || !user.passwordResetOtpExpiresAt) {
-            throw new Error(AUTH_MESSAGES.NO_ACTIVE_PASSWORD_RESET);
+            throw new Error(messages_js_1.AUTH_MESSAGES.NO_ACTIVE_PASSWORD_RESET);
         }
         if (new Date(user.passwordResetOtpExpiresAt).getTime() < Date.now()) {
-            throw new Error(AUTH_MESSAGES.OTP_EXPIRED);
+            throw new Error(messages_js_1.AUTH_MESSAGES.OTP_EXPIRED);
         }
         const attempts = user.passwordResetOtpAttempts || 0;
-        if (attempts >= AUTH_LIMITS.MAX_OTP_ATTEMPTS) {
-            throw new Error(AUTH_MESSAGES.TOO_MANY_OTP_ATTEMPTS);
+        if (attempts >= config_js_1.AUTH_LIMITS.MAX_OTP_ATTEMPTS) {
+            throw new Error(messages_js_1.AUTH_MESSAGES.TOO_MANY_OTP_ATTEMPTS);
         }
-        const isOtpValid = await bcrypt.compare(input.otp, user.passwordResetOtpHash);
+        const isOtpValid = await bcryptjs_1.default.compare(input.otp, user.passwordResetOtpHash);
         if (!isOtpValid) {
             user.passwordResetOtpAttempts = attempts + 1;
             await this._repository.save(user);
-            throw new Error(`${AUTH_MESSAGES.INVALID_OTP} ${AUTH_LIMITS.MAX_OTP_ATTEMPTS - user.passwordResetOtpAttempts} attempts left.`);
+            throw new Error(`${messages_js_1.AUTH_MESSAGES.INVALID_OTP} ${config_js_1.AUTH_LIMITS.MAX_OTP_ATTEMPTS - user.passwordResetOtpAttempts} attempts left.`);
         }
-        user.passwordHash = await bcrypt.hash(input.password, AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
+        user.passwordHash = await bcryptjs_1.default.hash(input.password, config_js_1.AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
         user.passwordResetOtpHash = null;
         user.passwordResetOtpExpiresAt = null;
         user.passwordResetOtpAttempts = 0;
         user.passwordResetOtpLastSentAt = null;
         await this._repository.save(user);
         return {
-            message: AUTH_MESSAGES.PASSWORD_RESET_SUCCESS,
+            message: messages_js_1.AUTH_MESSAGES.PASSWORD_RESET_SUCCESS,
             user: this._mapper.toPublicUser(user)
         };
     }
     async updateProfile(userId, input) {
         const user = await this._repository.findById(userId);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.USER_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.USER_NOT_FOUND);
         }
         if (input.name) {
             user.name = input.name;
@@ -215,7 +224,7 @@ export class AuthService {
         if (input.email && input.email !== user.email) {
             const existingUser = await this._repository.findByEmail(input.email);
             if (existingUser && existingUser.id !== user.id) {
-                throw new Error(AUTH_MESSAGES.EMAIL_EXISTS);
+                throw new Error(messages_js_1.AUTH_MESSAGES.EMAIL_EXISTS);
             }
             user.email = input.email;
         }
@@ -228,16 +237,16 @@ export class AuthService {
     async changePassword(userId, input) {
         const user = await this._repository.findById(userId);
         if (!user) {
-            throw new Error(AUTH_MESSAGES.USER_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.USER_NOT_FOUND);
         }
-        const isCurrentPasswordValid = await bcrypt.compare(input.currentPassword, user.passwordHash);
+        const isCurrentPasswordValid = await bcryptjs_1.default.compare(input.currentPassword, user.passwordHash);
         if (!isCurrentPasswordValid) {
-            throw new Error(AUTH_MESSAGES.INVALID_CURRENT_PASSWORD);
+            throw new Error(messages_js_1.AUTH_MESSAGES.INVALID_CURRENT_PASSWORD);
         }
-        user.passwordHash = await bcrypt.hash(input.newPassword, AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
+        user.passwordHash = await bcryptjs_1.default.hash(input.newPassword, config_js_1.AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
         await this._repository.save(user);
         return {
-            message: AUTH_MESSAGES.PASSWORD_CHANGE_SUCCESS,
+            message: messages_js_1.AUTH_MESSAGES.PASSWORD_CHANGE_SUCCESS,
             user: this._mapper.toPublicUser(user)
         };
     }
@@ -246,31 +255,45 @@ export class AuthService {
         return user ? this._mapper.toPublicUser(user) : null;
     }
     verifyToken(token) {
-        return jwt.verify(token, this.getJwtSecret());
+        return jsonwebtoken_1.default.verify(token, this.getJwtSecret());
     }
     signToken(user) {
         const payload = {
             userId: user.id,
             email: user.email
         };
-        const expiresIn = (process.env.JWT_EXPIRES_IN || AUTH_LIMITS.DEFAULT_JWT_EXPIRES_IN);
-        return jwt.sign(payload, this.getJwtSecret(), { expiresIn });
+        const expiresIn = (process.env.JWT_EXPIRES_IN || config_js_1.AUTH_LIMITS.DEFAULT_JWT_EXPIRES_IN);
+        return jsonwebtoken_1.default.sign(payload, this.getJwtSecret(), { expiresIn });
     }
     async createRefreshToken(user) {
-        const refreshToken = crypto.randomBytes(64).toString('hex');
-        user.refreshTokenHash = await bcrypt.hash(refreshToken, AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
-        user.refreshTokenExpiresAt = new Date(Date.now() + AUTH_LIMITS.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString();
+        const refreshToken = node_crypto_1.default.randomBytes(64).toString('hex');
+        user.refreshTokenHash = await bcryptjs_1.default.hash(refreshToken, config_js_1.AUTH_LIMITS.BCRYPT_PASSWORD_ROUNDS);
+        user.refreshTokenExpiresAt = new Date(Date.now() + config_js_1.AUTH_LIMITS.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString();
         await this._repository.save(user);
         return refreshToken;
     }
     getJwtSecret() {
         const secret = process.env.JWT_SECRET;
         if (!secret && process.env.NODE_ENV === 'production') {
-            throw new Error(AUTH_MESSAGES.JWT_SECRET_REQUIRED);
+            throw new Error(messages_js_1.AUTH_MESSAGES.JWT_SECRET_REQUIRED);
         }
-        return secret || AUTH_LIMITS.DEFAULT_JWT_SECRET;
+        return secret || config_js_1.AUTH_LIMITS.DEFAULT_JWT_SECRET;
     }
     generateOtp() {
-        return crypto.randomInt(AUTH_LIMITS.OTP_MIN, AUTH_LIMITS.OTP_MAX).toString();
+        return node_crypto_1.default.randomInt(config_js_1.AUTH_LIMITS.OTP_MIN, config_js_1.AUTH_LIMITS.OTP_MAX).toString();
+    }
+    getOtpTimingResponse(sentAt) {
+        if (!sentAt) {
+            return {
+                otpExpiresInSeconds: config_js_1.OTP_TIMING.EXPIRY_SECONDS,
+                resendAvailableInSeconds: config_js_1.OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS
+            };
+        }
+        const secondsSinceSend = Math.max(0, Math.floor((Date.now() - new Date(sentAt).getTime()) / 1000));
+        return {
+            otpExpiresInSeconds: Math.max(0, config_js_1.OTP_TIMING.EXPIRY_SECONDS - secondsSinceSend),
+            resendAvailableInSeconds: Math.max(0, config_js_1.OTP_TIMING.RESEND_AVAILABLE_AFTER_SECONDS - secondsSinceSend)
+        };
     }
 }
+exports.AuthService = AuthService;

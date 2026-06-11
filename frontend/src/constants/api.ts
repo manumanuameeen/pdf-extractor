@@ -7,10 +7,7 @@ export const API_ENDPOINTS = {
     RESEND_OTP: '/api/auth/resend-otp',
     LOGIN: '/api/auth/login',
     REFRESH_TOKEN: '/api/auth/refresh-token',
-    FORGOT_PASSWORD: '/api/auth/forgot-password',
-    RESET_PASSWORD: '/api/auth/reset-password',
     PROFILE: '/api/auth/profile',
-    CHANGE_PASSWORD: '/api/auth/change-password',
     ME: '/api/auth/me',
   },
   PDFS: {
@@ -21,7 +18,7 @@ export const API_ENDPOINTS = {
 
 export const STORAGE_KEYS = {
   TOKEN: 'pdf_extractor_token',
-  REFRESH_TOKEN: 'pdf_extractor_refresh_token'
+  REFRESH_TOKEN: 'pdf_extractor_refresh_token',
 } as const;
 
 export const HTTP_HEADERS = {

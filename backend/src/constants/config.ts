@@ -1,3 +1,8 @@
+const readPositiveInteger = (value: string | undefined, fallback: number): number => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 export const STORAGE = {
   UPLOAD_DIR_ENV: 'UPLOAD_DIR',
   OUTPUT_DIR_ENV: 'OUTPUT_DIR',
@@ -13,14 +18,18 @@ export const AUTH_LIMITS = {
   MIN_PASSWORD_LENGTH: 8,
   OTP_MIN: 100000,
   OTP_MAX: 999999,
-  OTP_EXPIRY_MINUTES: 10,
-  OTP_RESEND_COOLDOWN_SECONDS: 60,
+  OTP_EXPIRY_MINUTES: readPositiveInteger(process.env.OTP_EXPIRY_MINUTES, 10),
   MAX_OTP_ATTEMPTS: 5,
   BCRYPT_PASSWORD_ROUNDS: 12,
   BCRYPT_OTP_ROUNDS: 10,
   DEFAULT_JWT_SECRET: 'development-jwt-secret-change-me',
   DEFAULT_JWT_EXPIRES_IN: '7d',
   REFRESH_TOKEN_EXPIRY_DAYS: 7
+} as const;
+
+export const OTP_TIMING = {
+  EXPIRY_SECONDS: AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60,
+  RESEND_AVAILABLE_AFTER_SECONDS: Math.ceil((AUTH_LIMITS.OTP_EXPIRY_MINUTES * 60) / 2)
 } as const;
 
 export const FILE_LIMITS = {

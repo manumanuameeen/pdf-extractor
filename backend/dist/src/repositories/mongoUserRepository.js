@@ -1,6 +1,12 @@
-import bcrypt from 'bcryptjs';
-import User from '../models/userModel.js';
-export class MongoUserRepository {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MongoUserRepository = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const userModel_js_1 = __importDefault(require("../models/userModel.js"));
+class MongoUserRepository {
     mapToUserRecord(doc) {
         return {
             id: doc._id,
@@ -23,21 +29,21 @@ export class MongoUserRepository {
         };
     }
     async findAll() {
-        const docs = await User.find({});
+        const docs = await userModel_js_1.default.find({});
         return docs.map((doc) => this.mapToUserRecord(doc));
     }
     async findById(id) {
-        const doc = await User.findById(id);
+        const doc = await userModel_js_1.default.findById(id);
         return doc ? this.mapToUserRecord(doc) : null;
     }
     async findByEmail(email) {
-        const doc = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        const doc = await userModel_js_1.default.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
         return doc ? this.mapToUserRecord(doc) : null;
     }
     async findByRefreshToken(refreshToken) {
-        const docs = await User.find({ refreshTokenHash: { $ne: null } });
+        const docs = await userModel_js_1.default.find({ refreshTokenHash: { $ne: null } });
         for (const doc of docs) {
-            if (await bcrypt.compare(refreshToken, doc.refreshTokenHash)) {
+            if (await bcryptjs_1.default.compare(refreshToken, doc.refreshTokenHash)) {
                 return this.mapToUserRecord(doc);
             }
         }
@@ -62,7 +68,8 @@ export class MongoUserRepository {
             passwordResetOtpLastSentAt: record.passwordResetOtpLastSentAt,
             profilePhotoUrl: record.profilePhotoUrl
         };
-        await User.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
+        await userModel_js_1.default.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
         return record;
     }
 }
+exports.MongoUserRepository = MongoUserRepository;
