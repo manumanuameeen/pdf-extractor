@@ -4,6 +4,8 @@ import { AUTH_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IEmailService, SendOtpResult } from '../contracts/services.js';
 
 export class EmailService implements IEmailService {
+  private transporter: nodemailer.Transporter | null = null;
+
   async sendOtp(email: string, otp: string): Promise<SendOtpResult> {
     return this.sendOtpMail(email, otp, 'Verify your PDF Extractor account');
   }
@@ -28,20 +30,35 @@ export class EmailService implements IEmailService {
       return { delivered: false, devMode: true };
     }
 
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === SMTP_DEFAULTS.SECURE_PORT,
-      auth: { user, pass }
-    });
+    // Lazily create and reuse a pooled transporter to avoid connecting on every request
+    if (!this.transporter) {
+      this.transporter = nodemailer.createTransport({
+        pool: true,
+        host,
+        port,
+        secure: port === SMTP_DEFAULTS.SECURE_PORT,
+        auth: { user, pass },
+        maxConnections: 5,
+        maxMessages: 100,
+        // Timeouts to fail fast on network issues
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000
+      });
+    }
 
-    await transporter.sendMail({
+    const start = Date.now();
+    await this.transporter.sendMail({
       from,
       to: email,
       subject,
       text: `Your verification OTP is ${otp}. It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.`,
       html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`
     });
+    const took = Date.now() - start;
+    if (took > 2000) {
+      console.warn(`Slow email send: ${took}ms for ${email}`);
+    }
 
     return { delivered: true, devMode: false };
   }

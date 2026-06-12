@@ -2,6 +2,7 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
 import { container } from '../di/container.js';
+import { sendError } from '../utils/responseSender.js';
 import type { AuthTokenPayload } from '../types/models.js';
 
 export type AuthenticatedRequest<
@@ -23,7 +24,7 @@ export class AuthenticationMiddleware {
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
-      res.status(STATUS_CODES.UNAUTHORIZED).json({ error: AUTH_MESSAGES.TOKEN_REQUIRED });
+      sendError(res, STATUS_CODES.UNAUTHORIZED, AUTH_MESSAGES.TOKEN_REQUIRED);
       return;
     }
 
@@ -33,7 +34,7 @@ export class AuthenticationMiddleware {
       (req as AuthenticatedRequest).user = payload;
       next();
     } catch {
-      res.status(STATUS_CODES.UNAUTHORIZED).json({ error: AUTH_MESSAGES.INVALID_TOKEN });
+      sendError(res, STATUS_CODES.UNAUTHORIZED, AUTH_MESSAGES.INVALID_TOKEN);
     }
   };
 }

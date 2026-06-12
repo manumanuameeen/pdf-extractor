@@ -6,6 +6,7 @@ import type { AuthResponse, IAuthService } from '../contracts/services.js';
 import type { IAuthDtoValidator } from '../contracts/validators.js';
 import type { IAuthController } from '../contracts/controllers.js';
 import type { AuthenticatedRequest } from '../middleware/authenticate.js';
+import { sendError, sendSuccess } from '../utils/responseSender.js';
 
 /**
  * ARCHITECTURE: CONTROLLER LAYER
@@ -21,7 +22,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateSignup(req.body);
       const result = await this._service.signup(dto);
-      res.status(STATUS_CODES.CREATED).json(result);
+      sendSuccess(res, STATUS_CODES.CREATED, result);
     } catch (error) {
       next(error);
     }
@@ -31,7 +32,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateVerifyOtp(req.body);
       const result = await this._service.verifyOtp(dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -41,7 +42,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateResendOtp(req.body);
       const result = await this._service.resendOtp(dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -51,7 +52,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateLogin(req.body);
       const result = await this._service.login(dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -61,7 +62,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateRefreshToken(req.body);
       const result = await this._service.refreshToken(dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -71,7 +72,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateForgotPassword(req.body);
       const result = await this._service.forgotPassword(dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -81,7 +82,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateResetPassword(req.body);
       const result = await this._service.resetPassword(dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -99,7 +100,7 @@ export class AuthController implements IAuthController {
         ...dto,
         profilePhotoUrl
       });
-      res.status(STATUS_CODES.OK).json({ user: result });
+      sendSuccess(res, STATUS_CODES.OK, { user: result });
     } catch (error) {
       next(error);
     }
@@ -113,7 +114,7 @@ export class AuthController implements IAuthController {
     try {
       const dto = this._validator.validateChangePassword(req.body);
       const result = await this._service.changePassword(req.user.userId, dto);
-      res.status(STATUS_CODES.OK).json(result);
+      sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
@@ -128,11 +129,11 @@ export class AuthController implements IAuthController {
       const user = await this._service.getUserById(req.user.userId);
 
       if (!user) {
-        res.status(STATUS_CODES.NOT_FOUND).json({ error: AUTH_MESSAGES.USER_NOT_FOUND });
+        sendError(res, STATUS_CODES.NOT_FOUND, AUTH_MESSAGES.USER_NOT_FOUND);
         return;
       }
 
-      res.status(STATUS_CODES.OK).json({ user });
+      sendSuccess(res, STATUS_CODES.OK, { user });
     } catch (error) {
       next(error);
     }

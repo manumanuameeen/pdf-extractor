@@ -7,6 +7,7 @@ import { SYSTEM_MESSAGES } from './constants/messages.js';
 import { API_ROUTES } from './constants/routes.js';
 import { STATUS_CODES } from './constants/statusCodes.js';
 import { appDependencies } from './config/dependencies.js';
+import { sendError } from './utils/responseSender.js';
 
 /**
  * ARCHITECTURE: ERROR HANDLER CLASS
@@ -31,7 +32,7 @@ class ErrorHandlerMiddleware {
     }
     console.error('-----------------------------------------\n');
 
-    res.status(statusCode).json({ error: message });
+    sendError(res, statusCode, message);
   };
 
   private getStatusCode(message: string, err: unknown): number {

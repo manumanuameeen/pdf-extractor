@@ -10,6 +10,7 @@ const node_path_1 = __importDefault(require("node:path"));
 const config_js_1 = require("../constants/config.js");
 const messages_js_1 = require("../constants/messages.js");
 const statusCodes_js_1 = require("../constants/statusCodes.js");
+const responseSender_js_1 = require("../utils/responseSender.js");
 class PdfController {
     _service;
     _repository;
@@ -24,7 +25,7 @@ class PdfController {
     uploadPdf = async (req, res, next) => {
         try {
             if (!req.file) {
-                res.status(statusCodes_js_1.STATUS_CODES.BAD_REQUEST).json({ error: messages_js_1.PDF_MESSAGES.NO_FILE_UPLOADED });
+                (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.BAD_REQUEST, messages_js_1.PDF_MESSAGES.NO_FILE_UPLOADED);
                 return;
             }
             const metadata = await this._service.getMetadata(req.file.path);
@@ -37,7 +38,7 @@ class PdfController {
                 path: req.file.path
             });
             await this._repository.save(record);
-            res.status(statusCodes_js_1.STATUS_CODES.CREATED).json(this._mapper.toUploadResponse(record));
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.CREATED, this._mapper.toUploadResponse(record));
         }
         catch (error) {
             next(error);
@@ -47,7 +48,7 @@ class PdfController {
         try {
             const pdfRecord = await this._repository.findOwnedByUser(req.params.id, req.user.userId);
             if (!pdfRecord || !(await this._fileExists(pdfRecord.path))) {
-                res.status(statusCodes_js_1.STATUS_CODES.NOT_FOUND).json({ error: messages_js_1.PDF_MESSAGES.PDF_NOT_FOUND_REUPLOAD });
+                (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.NOT_FOUND, messages_js_1.PDF_MESSAGES.PDF_NOT_FOUND_REUPLOAD);
                 return;
             }
             const dto = this._validator.validateExtractPages(req.body);
@@ -56,7 +57,7 @@ class PdfController {
             const outputPath = this._getOutputPath(outputFileName);
             await promises_1.default.mkdir(node_path_1.default.dirname(outputPath), { recursive: true });
             await promises_1.default.writeFile(outputPath, extractedPdf);
-            res.status(statusCodes_js_1.STATUS_CODES.CREATED).json(this._mapper.toExtractResponse(outputFileName, dto.pageIndices.length));
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.CREATED, this._mapper.toExtractResponse(outputFileName, dto.pageIndices.length));
         }
         catch (error) {
             next(error);
@@ -66,7 +67,7 @@ class PdfController {
         try {
             const pdfRecord = await this._repository.findOwnedByUser(req.params.id, req.user.userId);
             if (!pdfRecord || !(await this._fileExists(pdfRecord.path))) {
-                res.status(statusCodes_js_1.STATUS_CODES.NOT_FOUND).json({ error: messages_js_1.PDF_MESSAGES.PDF_NOT_FOUND });
+                (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.NOT_FOUND, messages_js_1.PDF_MESSAGES.PDF_NOT_FOUND);
                 return;
             }
             res.setHeader('Content-Type', 'application/pdf');

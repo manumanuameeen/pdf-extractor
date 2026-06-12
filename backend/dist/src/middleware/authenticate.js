@@ -4,6 +4,7 @@ exports.authenticate = exports.AuthenticationMiddleware = void 0;
 const messages_js_1 = require("../constants/messages.js");
 const statusCodes_js_1 = require("../constants/statusCodes.js");
 const container_js_1 = require("../di/container.js");
+const responseSender_js_1 = require("../utils/responseSender.js");
 /**
  * ARCHITECTURE: AUTH MIDDLEWARE CLASS
  * Purpose: Keep JWT extraction and verification separate from routes/controllers.
@@ -16,7 +17,7 @@ class AuthenticationMiddleware {
     handle = (req, res, next) => {
         const authHeader = req.headers.authorization;
         if (!authHeader?.startsWith('Bearer ')) {
-            res.status(statusCodes_js_1.STATUS_CODES.UNAUTHORIZED).json({ error: messages_js_1.AUTH_MESSAGES.TOKEN_REQUIRED });
+            (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.UNAUTHORIZED, messages_js_1.AUTH_MESSAGES.TOKEN_REQUIRED);
             return;
         }
         try {
@@ -26,7 +27,7 @@ class AuthenticationMiddleware {
             next();
         }
         catch {
-            res.status(statusCodes_js_1.STATUS_CODES.UNAUTHORIZED).json({ error: messages_js_1.AUTH_MESSAGES.INVALID_TOKEN });
+            (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.UNAUTHORIZED, messages_js_1.AUTH_MESSAGES.INVALID_TOKEN);
         }
     };
 }

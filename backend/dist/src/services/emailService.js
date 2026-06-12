@@ -8,6 +8,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const config_js_1 = require("../constants/config.js");
 const messages_js_1 = require("../constants/messages.js");
 class EmailService {
+    transporter = null;
     async sendOtp(email, otp) {
         return this.sendOtpMail(email, otp, 'Verify your PDF Extractor account');
     }
@@ -27,19 +28,34 @@ class EmailService {
             console.log(messages_js_1.SYSTEM_MESSAGES.DEV_OTP_LOG.replace('{email}', email).replace('{otp}', otp));
             return { delivered: false, devMode: true };
         }
-        const transporter = nodemailer_1.default.createTransport({
-            host,
-            port,
-            secure: port === config_js_1.SMTP_DEFAULTS.SECURE_PORT,
-            auth: { user, pass }
-        });
-        await transporter.sendMail({
+        // Lazily create and reuse a pooled transporter to avoid connecting on every request
+        if (!this.transporter) {
+            this.transporter = nodemailer_1.default.createTransport({
+                pool: true,
+                host,
+                port,
+                secure: port === config_js_1.SMTP_DEFAULTS.SECURE_PORT,
+                auth: { user, pass },
+                maxConnections: 5,
+                maxMessages: 100,
+                // Timeouts to fail fast on network issues
+                connectionTimeout: 5000,
+                greetingTimeout: 5000,
+                socketTimeout: 10000
+            });
+        }
+        const start = Date.now();
+        await this.transporter.sendMail({
             from,
             to: email,
             subject,
             text: `Your verification OTP is ${otp}. It expires in ${config_js_1.AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.`,
             html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${config_js_1.AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`
         });
+        const took = Date.now() - start;
+        if (took > 2000) {
+            console.warn(`Slow email send: ${took}ms for ${email}`);
+        }
         return { delivered: true, devMode: false };
     }
 }

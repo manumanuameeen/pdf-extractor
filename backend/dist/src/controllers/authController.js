@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const messages_js_1 = require("../constants/messages.js");
 const statusCodes_js_1 = require("../constants/statusCodes.js");
+const responseSender_js_1 = require("../utils/responseSender.js");
 /**
  * ARCHITECTURE: CONTROLLER LAYER
  * Purpose: Validate DTOs, call services, and shape HTTP responses.
@@ -18,7 +19,7 @@ class AuthController {
         try {
             const dto = this._validator.validateSignup(req.body);
             const result = await this._service.signup(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.CREATED).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.CREATED, result);
         }
         catch (error) {
             next(error);
@@ -28,7 +29,7 @@ class AuthController {
         try {
             const dto = this._validator.validateVerifyOtp(req.body);
             const result = await this._service.verifyOtp(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -38,7 +39,7 @@ class AuthController {
         try {
             const dto = this._validator.validateResendOtp(req.body);
             const result = await this._service.resendOtp(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -48,7 +49,7 @@ class AuthController {
         try {
             const dto = this._validator.validateLogin(req.body);
             const result = await this._service.login(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -58,7 +59,7 @@ class AuthController {
         try {
             const dto = this._validator.validateRefreshToken(req.body);
             const result = await this._service.refreshToken(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -68,7 +69,7 @@ class AuthController {
         try {
             const dto = this._validator.validateForgotPassword(req.body);
             const result = await this._service.forgotPassword(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -78,7 +79,7 @@ class AuthController {
         try {
             const dto = this._validator.validateResetPassword(req.body);
             const result = await this._service.resetPassword(dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -92,7 +93,7 @@ class AuthController {
                 ...dto,
                 profilePhotoUrl
             });
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json({ user: result });
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, { user: result });
         }
         catch (error) {
             next(error);
@@ -102,7 +103,7 @@ class AuthController {
         try {
             const dto = this._validator.validateChangePassword(req.body);
             const result = await this._service.changePassword(req.user.userId, dto);
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json(result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -112,10 +113,10 @@ class AuthController {
         try {
             const user = await this._service.getUserById(req.user.userId);
             if (!user) {
-                res.status(statusCodes_js_1.STATUS_CODES.NOT_FOUND).json({ error: messages_js_1.AUTH_MESSAGES.USER_NOT_FOUND });
+                (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.NOT_FOUND, messages_js_1.AUTH_MESSAGES.USER_NOT_FOUND);
                 return;
             }
-            res.status(statusCodes_js_1.STATUS_CODES.OK).json({ user });
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, { user });
         }
         catch (error) {
             next(error);

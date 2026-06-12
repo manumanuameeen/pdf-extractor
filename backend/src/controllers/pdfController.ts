@@ -6,6 +6,7 @@ import { STORAGE } from '../constants/config.js';
 import { PDF_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
 import type { ErrorResponseDto, IPdfMapper } from '../contracts/mappers.js';
+import { sendError, sendSuccess } from '../utils/responseSender.js';
 import type { IPdfRepository } from '../contracts/repositories.js';
 import type { IPdfService } from '../contracts/services.js';
 import type { IPdfDtoValidator } from '../contracts/validators.js';
@@ -29,7 +30,7 @@ export class PdfController implements IPdfController {
   ): Promise<void> => {
     try {
       if (!req.file) {
-        res.status(STATUS_CODES.BAD_REQUEST).json({ error: PDF_MESSAGES.NO_FILE_UPLOADED });
+        sendError(res, STATUS_CODES.BAD_REQUEST, PDF_MESSAGES.NO_FILE_UPLOADED);
         return;
       }
 
@@ -44,7 +45,7 @@ export class PdfController implements IPdfController {
       });
 
       await this._repository.save(record);
-      res.status(STATUS_CODES.CREATED).json(this._mapper.toUploadResponse(record));
+      sendSuccess(res, STATUS_CODES.CREATED, this._mapper.toUploadResponse(record));
     } catch (error) {
       next(error);
     }
@@ -59,7 +60,7 @@ export class PdfController implements IPdfController {
       const pdfRecord = await this._repository.findOwnedByUser(req.params.id, req.user.userId);
 
       if (!pdfRecord || !(await this._fileExists(pdfRecord.path))) {
-        res.status(STATUS_CODES.NOT_FOUND).json({ error: PDF_MESSAGES.PDF_NOT_FOUND_REUPLOAD });
+        sendError(res, STATUS_CODES.NOT_FOUND, PDF_MESSAGES.PDF_NOT_FOUND_REUPLOAD);
         return;
       }
 
@@ -71,7 +72,7 @@ export class PdfController implements IPdfController {
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(outputPath, extractedPdf);
 
-      res.status(STATUS_CODES.CREATED).json(this._mapper.toExtractResponse(outputFileName, dto.pageIndices.length));
+      sendSuccess(res, STATUS_CODES.CREATED, this._mapper.toExtractResponse(outputFileName, dto.pageIndices.length));
     } catch (error) {
       next(error);
     }
@@ -86,7 +87,7 @@ export class PdfController implements IPdfController {
       const pdfRecord = await this._repository.findOwnedByUser(req.params.id, req.user.userId);
 
       if (!pdfRecord || !(await this._fileExists(pdfRecord.path))) {
-        res.status(STATUS_CODES.NOT_FOUND).json({ error: PDF_MESSAGES.PDF_NOT_FOUND });
+        sendError(res, STATUS_CODES.NOT_FOUND, PDF_MESSAGES.PDF_NOT_FOUND);
         return;
       }
 

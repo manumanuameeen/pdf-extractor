@@ -12,6 +12,7 @@ const messages_js_1 = require("./constants/messages.js");
 const routes_js_1 = require("./constants/routes.js");
 const statusCodes_js_1 = require("./constants/statusCodes.js");
 const dependencies_js_1 = require("./config/dependencies.js");
+const responseSender_js_1 = require("./utils/responseSender.js");
 /**
  * ARCHITECTURE: ERROR HANDLER CLASS
  * Purpose: Convert application errors into consistent HTTP responses.
@@ -33,7 +34,7 @@ class ErrorHandlerMiddleware {
             console.error(err);
         }
         console.error('-----------------------------------------\n');
-        res.status(statusCode).json({ error: message });
+        (0, responseSender_js_1.sendError)(res, statusCode, message);
     };
     getStatusCode(message, err) {
         const normalizedMessage = message.toLowerCase();
