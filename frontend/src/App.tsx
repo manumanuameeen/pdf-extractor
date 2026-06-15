@@ -269,6 +269,7 @@ function App() {
       setOtpExpiryTimer(response.data.otpExpiresInSeconds ?? null)
       setResendCooldown(response.data.resendAvailableInSeconds ?? null)
     } catch (error) {
+      console.error('API Error during Signup:', axios.isAxiosError(error) ? error.response?.data : error);
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.SIGNUP_FAILED
         : UI_MESSAGES.SIGNUP_FAILED
@@ -339,6 +340,7 @@ function App() {
       }
       showToast(response.data.message, 'success')
     } catch (error) {
+      console.error('API Error during Login:', axios.isAxiosError(error) ? error.response?.data : error);
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.LOGIN_FAILED
         : UI_MESSAGES.LOGIN_FAILED
