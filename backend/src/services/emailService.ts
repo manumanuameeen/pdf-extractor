@@ -1,4 +1,9 @@
+import dns from 'node:dns';
 import nodemailer from 'nodemailer';
+
+// Force Node's DNS resolver to prefer IPv4 over IPv6. 
+// This fixes the 'ENETUNREACH' error on platforms like Render where outbound IPv6 to Gmail SMTP might fail.
+dns.setDefaultResultOrder('ipv4first');
 import { AUTH_LIMITS, SMTP_DEFAULTS } from '../constants/config.js';
 import { AUTH_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IEmailService, SendOtpResult } from '../contracts/services.js';
