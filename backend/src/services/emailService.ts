@@ -43,6 +43,9 @@ export class EmailService implements IEmailService {
         port,
         secure: port === SMTP_DEFAULTS.SECURE_PORT,
         auth: { user, pass },
+        // Force IPv4 connection to prevent ENETUNREACH on IPv6-restricted servers
+        // @ts-ignore - 'family' is passed to underlying net.connect but might be missing in some nodemailer type definitions
+        family: 4,
         maxConnections: 5,
         maxMessages: 100,
         // Timeouts to fail fast on network issues
