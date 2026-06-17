@@ -1,9 +1,5 @@
 import dns from 'node:dns';
 import nodemailer from 'nodemailer';
-
-// Force Node's DNS resolver to prefer IPv4 over IPv6. 
-// This fixes the 'ENETUNREACH' error on platforms like Render where outbound IPv6 to Gmail SMTP might fail.
-dns.setDefaultResultOrder('ipv4first');
 import { AUTH_LIMITS, SMTP_DEFAULTS } from '../constants/config.js';
 import { AUTH_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IEmailService, SendOtpResult } from '../contracts/services.js';
@@ -35,21 +31,29 @@ export class EmailService implements IEmailService {
       return { delivered: false, devMode: true };
     }
 
-    // Lazily create and reuse a pooled transporter to avoid connecting on every request
+    // Lazily create transporter. On first call, manually resolve the SMTP host to an
+    // IPv4 address to guarantee we never attempt an IPv6 connection on Render's network.
     if (!this.transporter) {
+      let resolvedHost = host;
+      try {
+        const { address } = await dns.promises.lookup(host, { family: 4 });
+        resolvedHost = address;
+        console.log(`SMTP host ${host} resolved to IPv4: ${resolvedHost}`);
+      } catch (err) {
+        console.warn(`DNS lookup for ${host} failed, falling back to hostname: ${err}`);
+      }
+
       this.transporter = nodemailer.createTransport({
-        pool: true,
-        host,
+        host: resolvedHost,
         port,
         secure: port === SMTP_DEFAULTS.SECURE_PORT,
         auth: { user, pass },
-        family: 4,
-        maxConnections: 5,
-        maxMessages: 100,
+        // Pass the original hostname so TLS can verify the certificate
+        tls: { servername: host },
         connectionTimeout: 5000,
         greetingTimeout: 5000,
-        socketTimeout: 10000
-      } as any);
+        socketTimeout: 10000,
+      });
     }
 
     const start = Date.now();
