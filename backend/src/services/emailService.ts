@@ -1,11 +1,13 @@
-import dns from 'node:dns';
+import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
+import dns from 'node:dns';
 import { AUTH_LIMITS, SMTP_DEFAULTS } from '../constants/config.js';
 import { AUTH_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IEmailService, SendOtpResult } from '../contracts/services.js';
 
 export class EmailService implements IEmailService {
-  private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend | null = null;
+  private smtpTransporter: nodemailer.Transporter | null = null;
 
   async sendOtp(email: string, otp: string): Promise<SendOtpResult> {
     return this.sendOtpMail(email, otp, 'Verify your PDF Extractor account');
@@ -16,13 +18,39 @@ export class EmailService implements IEmailService {
   }
 
   private async sendOtpMail(email: string, otp: string, subject: string): Promise<SendOtpResult> {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
+
+    // --- Path 1: Use Resend HTTP API (works on Render free tier, no SMTP ports needed) ---
+    if (resendApiKey) {
+      if (!this.resend) {
+        this.resend = new Resend(resendApiKey);
+      }
+
+      const senderAddress = from ?? 'onboarding@resend.dev';
+      const { error } = await this.resend.emails.send({
+        from: senderAddress,
+        to: email,
+        subject,
+        text: `Your verification OTP is ${otp}. It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.`,
+        html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`,
+      });
+
+      if (error) {
+        throw new Error(`Resend error: ${error.message}`);
+      }
+
+      return { delivered: true, devMode: false };
+    }
+
+    // --- Path 2: Use SMTP via nodemailer (local dev only) ---
     const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
     const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || SMTP_DEFAULTS.PORT);
     const user = process.env.SMTP_USER || process.env.EMAIL_USER;
     const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || user;
+    const smtpFrom = from ?? user;
 
-    if (!host || !user || !pass || !from) {
+    if (!host || !user || !pass || !smtpFrom) {
       if (process.env.NODE_ENV === 'production') {
         throw new Error(AUTH_MESSAGES.EMAIL_CONFIGURATION_REQUIRED);
       }
@@ -31,9 +59,7 @@ export class EmailService implements IEmailService {
       return { delivered: false, devMode: true };
     }
 
-    // Lazily create transporter. On first call, manually resolve the SMTP host to an
-    // IPv4 address to guarantee we never attempt an IPv6 connection on Render's network.
-    if (!this.transporter) {
+    if (!this.smtpTransporter) {
       let resolvedHost = host;
       try {
         const { address } = await dns.promises.lookup(host, { family: 4 });
@@ -43,12 +69,11 @@ export class EmailService implements IEmailService {
         console.warn(`DNS lookup for ${host} failed, falling back to hostname: ${err}`);
       }
 
-      this.transporter = nodemailer.createTransport({
+      this.smtpTransporter = nodemailer.createTransport({
         host: resolvedHost,
         port,
         secure: port === SMTP_DEFAULTS.SECURE_PORT,
         auth: { user, pass },
-        // Pass the original hostname so TLS can verify the certificate
         tls: { servername: host },
         connectionTimeout: 5000,
         greetingTimeout: 5000,
@@ -57,16 +82,16 @@ export class EmailService implements IEmailService {
     }
 
     const start = Date.now();
-    await this.transporter.sendMail({
-      from,
+    await this.smtpTransporter.sendMail({
+      from: smtpFrom,
       to: email,
       subject,
       text: `Your verification OTP is ${otp}. It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.`,
-      html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`
+      html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`,
     });
-    const took = Date.now() - start;
-    if (took > 2000) {
-      console.warn(`Slow email send: ${took}ms for ${email}`);
+
+    if (Date.now() - start > 2000) {
+      console.warn(`Slow email send: ${Date.now() - start}ms for ${email}`);
     }
 
     return { delivered: true, devMode: false };
