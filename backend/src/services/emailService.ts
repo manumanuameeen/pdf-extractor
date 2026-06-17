@@ -1,99 +1,43 @@
-import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
-import dns from 'node:dns';
-import { AUTH_LIMITS, SMTP_DEFAULTS } from '../constants/config.js';
-import { AUTH_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
-import type { IEmailService, SendOtpResult } from '../contracts/services.js';
 
-export class EmailService implements IEmailService {
-  private resend: Resend | null = null;
-  private smtpTransporter: nodemailer.Transporter | null = null;
+export class EmailService {
+  private transporter: nodemailer.Transporter;
 
-  async sendOtp(email: string, otp: string): Promise<SendOtpResult> {
-    return this.sendOtpMail(email, otp, 'Verify your PDF Extractor account');
-  }
-
-  async sendPasswordResetOtp(email: string, otp: string): Promise<SendOtpResult> {
-    return this.sendOtpMail(email, otp, 'Reset your PDF Extractor password');
-  }
-
-  private async sendOtpMail(email: string, otp: string, subject: string): Promise<SendOtpResult> {
-    const resendApiKey = process.env.RESEND_API_KEY;
-    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
-
-    // --- Path 1: Use Resend HTTP API (works on Render free tier, no SMTP ports needed) ---
-    if (resendApiKey) {
-      if (!this.resend) {
-        this.resend = new Resend(resendApiKey);
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: Number(process.env.EMAIL_PORT) || 587,
+      secure: Number(process.env.EMAIL_PORT) === 465, 
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       }
-
-      const senderAddress = from ?? 'onboarding@resend.dev';
-      const { error } = await this.resend.emails.send({
-        from: senderAddress,
-        to: email,
-        subject,
-        text: `Your verification OTP is ${otp}. It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.`,
-        html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`,
-      });
-
-      if (error) {
-        throw new Error(`Resend error: ${error.message}`);
-      }
-
-      return { delivered: true, devMode: false };
-    }
-
-    // --- Path 2: Use SMTP via nodemailer (local dev only) ---
-    const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-    const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || SMTP_DEFAULTS.PORT);
-    const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-    const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-    const smtpFrom = from ?? user;
-
-    if (!host || !user || !pass || !smtpFrom) {
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(AUTH_MESSAGES.EMAIL_CONFIGURATION_REQUIRED);
-      }
-
-      console.log(SYSTEM_MESSAGES.DEV_OTP_LOG.replace('{email}', email).replace('{otp}', otp));
-      return { delivered: false, devMode: true };
-    }
-
-    if (!this.smtpTransporter) {
-      let resolvedHost = host;
-      try {
-        const { address } = await dns.promises.lookup(host, { family: 4 });
-        resolvedHost = address;
-        console.log(`SMTP host ${host} resolved to IPv4: ${resolvedHost}`);
-      } catch (err) {
-        console.warn(`DNS lookup for ${host} failed, falling back to hostname: ${err}`);
-      }
-
-      this.smtpTransporter = nodemailer.createTransport({
-        host: resolvedHost,
-        port,
-        secure: port === SMTP_DEFAULTS.SECURE_PORT,
-        auth: { user, pass },
-        tls: { servername: host },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000,
-      });
-    }
-
-    const start = Date.now();
-    await this.smtpTransporter.sendMail({
-      from: smtpFrom,
-      to: email,
-      subject,
-      text: `Your verification OTP is ${otp}. It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.`,
-      html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in ${AUTH_LIMITS.OTP_EXPIRY_MINUTES} minutes.</p>`,
     });
+  }
 
-    if (Date.now() - start > 2000) {
-      console.warn(`Slow email send: ${Date.now() - start}ms for ${email}`);
+  async sendOtpEmail(to: string, otp: string): Promise<void> {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to,
+      subject: 'Your Authentication Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
+          <h2>Your Authentication Code</h2>
+          <p>Please use the following 6-digit code to verify your identity.</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 30px 0; padding: 15px; background: #f4f4f4; border-radius: 8px;">
+            ${otp}
+          </div>
+          <p style="color: #e74c3c; font-weight: bold;">This code expires in 5 minutes. If you did not request this, please ignore this email.</p>
+        </div>
+      `
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`OTP email sent to ${to}`);
+    } catch (error) {
+      console.error('Failed to send OTP email via Nodemailer:', error);
+      throw new Error('Failed to dispatch email. Please ensure SMTP configurations are correct.');
     }
-
-    return { delivered: true, devMode: false };
   }
 }

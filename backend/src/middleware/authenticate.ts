@@ -1,8 +1,8 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
-import { container } from '../di/container.js';
 import { sendError } from '../utils/responseSender.js';
+import { container } from '../di/container.js';
 import type { AuthTokenPayload } from '../types/models.js';
 
 export type AuthenticatedRequest<
@@ -31,9 +31,11 @@ export class AuthenticationMiddleware {
     try {
       const token = authHeader.replace('Bearer ', '').trim();
       const payload = this._service.verifyToken(token);
+      
       (req as AuthenticatedRequest).user = payload;
       next();
-    } catch {
+    } catch (err) {
+      console.error('JWT token verification failed:', err);
       sendError(res, STATUS_CODES.UNAUTHORIZED, AUTH_MESSAGES.INVALID_TOKEN);
     }
   };

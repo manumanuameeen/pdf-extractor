@@ -7,7 +7,6 @@ import { SYSTEM_MESSAGES } from './src/constants/messages';
  * Purpose: Load environment variables and start the HTTP server.
  */
 
-
 const PORT = Number(process.env.PORT) || 5000;
 
 app.listen(PORT, () => {

@@ -1,6 +1,5 @@
 import { AuthController } from '../controllers/authController.js';
 import { PdfController } from '../controllers/pdfController.js';
-import { AuthDtoValidator } from '../dtos/authDtos.js';
 import { PdfDtoValidator } from '../dtos/pdfDtos.js';
 import { PdfMapper } from '../mappers/pdfMapper.js';
 import { UserMapper } from '../mappers/userMapper.js';
@@ -30,14 +29,13 @@ class AppDependencies {
   readonly userMapper = new UserMapper();
   readonly pdfMapper = new PdfMapper();
 
-  readonly authDtoValidator = new AuthDtoValidator();
   readonly pdfDtoValidator = new PdfDtoValidator();
 
   readonly emailService = new EmailService();
   readonly authService = new AuthService(this.userRepository, this.emailService, this.userMapper);
   readonly pdfService = new PdfService();
 
-  readonly authController = new AuthController(this.authService, this.authDtoValidator);
+  readonly authController = new AuthController(this.authService);
   readonly pdfController = new PdfController(
     this.pdfService,
     this.pdfRepository,

@@ -5,6 +5,7 @@ import * as pdfjsLib from 'pdfjs-dist'
 import { ArrowDown, ArrowUp, Check, Download, FileText, Loader2, LogOut, RotateCcw, Scissors, ShieldCheck, UploadCloud, X } from 'lucide-react'
 import { API_BASE_URL, API_ENDPOINTS, HTTP_HEADERS, STORAGE_KEYS } from './constants/api'
 import { UI_MESSAGES } from './constants/messages'
+import { signup, login, verifyOtp, resendOtp, getProfile, logout as logoutService, type User } from './services/authService'
 import './App.css'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -20,14 +21,6 @@ type UploadedPdf = {
   previewUrl: string
 }
 
-type User = {
-  id: string
-  name: string
-  email: string
-  isVerified: boolean
-  createdAt: string
-}
-
 type ExtractedPdf = {
   fileName: string
   pageCount: number
@@ -37,16 +30,6 @@ type ExtractedPdf = {
 type ToastState = {
   tone: 'success' | 'error'
   message: string
-}
-
-type AuthResponse = {
-  message: string
-  user: User
-  token?: string
-  refreshToken?: string
-  devOtp?: string
-  otpExpiresInSeconds?: number
-  resendAvailableInSeconds?: number
 }
 
 type AuthMode = 'login' | 'signup' | 'verify'
@@ -78,24 +61,17 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
         </main>
       )
     }
-
     return this.props.children
   }
 }
 
 const formatFileSize = (bytes: number) => {
-  if (bytes < 1024 * 1024) {
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`
-  }
-
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 const getAssetUrl = (path: string) => {
-  if (path.startsWith('http')) {
-    return path
-  }
-
+  if (path.startsWith('http')) return path
   return `${API_BASE_URL}${path}`
 }
 
@@ -122,24 +98,17 @@ function PageCard({
     const renderPage = async () => {
       const canvas = canvasRef.current
       const context = canvas?.getContext('2d')
-
-      if (!canvas || !context) {
-        return
-      }
+      if (!canvas || !context) return
 
       const loadingTask = pdfjsLib.getDocument({
         url: pdfUrl,
-        httpHeaders: {
-          [HTTP_HEADERS.AUTHORIZATION]: `${HTTP_HEADERS.BEARER} ${token}`,
-        },
+        httpHeaders: { [HTTP_HEADERS.AUTHORIZATION]: `${HTTP_HEADERS.BEARER} ${token}` },
       })
       const pdf = await loadingTask.promise
       const page = await pdf.getPage(pageNumber)
       const viewport = page.getViewport({ scale: 0.45 })
 
-      if (cancelled) {
-        return
-      }
+      if (cancelled) return
 
       canvas.width = viewport.width
       canvas.height = viewport.height
@@ -149,16 +118,13 @@ function PageCard({
     renderPage().catch(() => {
       const canvas = canvasRef.current
       const context = canvas?.getContext('2d')
-
       if (canvas && context) {
         context.fillStyle = '#151926'
         context.fillRect(0, 0, canvas.width || 220, canvas.height || 300)
       }
     })
 
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [pdfUrl, pageNumber, token])
 
   const isSelected = selectedOrder !== null
@@ -180,15 +146,10 @@ function PageCard({
           {isSelected && <strong>#{selectedOrder}</strong>}
         </span>
       </button>
-
       {isSelected && (
         <div className="page-actions" aria-label={`Reorder page ${pageNumber}`}>
-          <button type="button" onClick={() => onMove(pageNumber, -1)} title="Move earlier">
-            <ArrowUp size={16} />
-          </button>
-          <button type="button" onClick={() => onMove(pageNumber, 1)} title="Move later">
-            <ArrowDown size={16} />
-          </button>
+          <button type="button" onClick={() => onMove(pageNumber, -1)} title="Move earlier"><ArrowUp size={16} /></button>
+          <button type="button" onClick={() => onMove(pageNumber, 1)} title="Move later"><ArrowDown size={16} /></button>
         </div>
       )}
     </motion.article>
@@ -201,7 +162,6 @@ function App() {
   const [authMode, setAuthMode] = useState<AuthMode>('login')
   const [authName, setAuthName] = useState('')
   const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
   const [authOtp, setAuthOtp] = useState('')
   const [devOtp, setDevOtp] = useState('')
   const [isAuthLoading, setIsAuthLoading] = useState(false)
@@ -221,26 +181,21 @@ function App() {
     window.setTimeout(() => setToast(null), 3600)
   }
 
+  // OTP countdown timers
   useEffect(() => {
     if (otpExpiryTimer === null && resendCooldown === null) return
-
     const interval = window.setInterval(() => {
       setOtpExpiryTimer((prev) => (prev === null ? null : Math.max(0, prev - 1)))
       setResendCooldown((prev) => (prev === null ? null : Math.max(0, prev - 1)))
     }, 1000)
-
     return () => window.clearInterval(interval)
   }, [otpExpiryTimer, resendCooldown])
 
+  // Restore session on mount
   useEffect(() => {
-    if (!token) {
-      return
-    }
-
-    axios.get<{ user: User }>(`${API_BASE_URL}${API_ENDPOINTS.AUTH.ME}`, {
-      headers: { [HTTP_HEADERS.AUTHORIZATION]: `${HTTP_HEADERS.BEARER} ${token}` },
-    })
-      .then((response) => setUser(response.data.user))
+    if (!token) return
+    getProfile()
+      .then((u) => setUser(u))
       .catch(() => {
         localStorage.removeItem(STORAGE_KEYS.TOKEN)
         setToken('')
@@ -248,28 +203,16 @@ function App() {
       })
   }, [token])
 
-  const saveSession = (nextToken: string, nextUser: User) => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, nextToken)
-    setToken(nextToken)
-    setUser(nextUser)
-  }
-
   const handleSignup = async () => {
     setIsAuthLoading(true)
-
     try {
-      const response = await axios.post<AuthResponse>(
-        `${API_BASE_URL}${API_ENDPOINTS.AUTH.SIGNUP}`,
-        { name: authName, email: authEmail, password: authPassword },
-      )
-
+      const res = await signup(authName, authEmail)
       setAuthMode('verify')
-      setDevOtp(response.data.devOtp ?? '')
-      showToast(response.data.message, 'success')
-      setOtpExpiryTimer(response.data.otpExpiresInSeconds ?? null)
-      setResendCooldown(response.data.resendAvailableInSeconds ?? null)
+      setDevOtp(res.devOtp ?? '')
+      setOtpExpiryTimer(300)      // 5 min
+      setResendCooldown(60)       // 60s cooldown
+      showToast(res.message, 'success')
     } catch (error) {
-      console.error('API Error during Signup:', axios.isAxiosError(error) ? error.response?.data : error);
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.SIGNUP_FAILED
         : UI_MESSAGES.SIGNUP_FAILED
@@ -279,19 +222,34 @@ function App() {
     }
   }
 
+  const handleLogin = async () => {
+    setIsAuthLoading(true)
+    try {
+      const res = await login(authEmail)
+      setAuthMode('verify')
+      setDevOtp(res.devOtp ?? '')
+      setOtpExpiryTimer(300)
+      setResendCooldown(60)
+      showToast(res.message, 'success')
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.error ?? UI_MESSAGES.LOGIN_FAILED
+        : UI_MESSAGES.LOGIN_FAILED
+      showToast(message, 'error')
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
   const handleVerifyOtp = async () => {
     setIsAuthLoading(true)
-
     try {
-      const response = await axios.post<AuthResponse>(
-        `${API_BASE_URL}${API_ENDPOINTS.AUTH.VERIFY_OTP}`,
-        { email: authEmail, otp: authOtp },
-      )
-
-      if (response.data.token) {
-        saveSession(response.data.token, response.data.user)
+      const res = await verifyOtp(authEmail, authOtp)
+      if (res.token && res.user) {
+        setToken(res.token)
+        setUser(res.user)
       }
-      showToast(response.data.message, 'success')
+      showToast(res.message, 'success')
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.OTP_VERIFICATION_FAILED
@@ -303,19 +261,15 @@ function App() {
   }
 
   const handleResendOtp = async () => {
+    if (resendCooldown && resendCooldown > 0) return
     setIsAuthLoading(true)
-
     try {
-      const response = await axios.post<AuthResponse>(
-        `${API_BASE_URL}${API_ENDPOINTS.AUTH.RESEND_OTP}`,
-        { email: authEmail },
-      )
-
-      setDevOtp(response.data.devOtp ?? '')
+      const res = await resendOtp(authEmail)
+      setDevOtp(res.devOtp ?? '')
       setAuthOtp('')
-      showToast(response.data.message, 'success')
-      setOtpExpiryTimer(response.data.otpExpiresInSeconds ?? null)
-      setResendCooldown(response.data.resendAvailableInSeconds ?? null)
+      setOtpExpiryTimer(300)
+      setResendCooldown(60)
+      showToast(res.message, 'success')
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.RESEND_OTP_FAILED
@@ -326,37 +280,16 @@ function App() {
     }
   }
 
-  const handleLogin = async () => {
-    setIsAuthLoading(true)
-
-    try {
-      const response = await axios.post<AuthResponse>(
-        `${API_BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`,
-        { email: authEmail, password: authPassword },
-      )
-
-      if (response.data.token) {
-        saveSession(response.data.token, response.data.user)
-      }
-      showToast(response.data.message, 'success')
-    } catch (error) {
-      console.error('API Error during Login:', axios.isAxiosError(error) ? error.response?.data : error);
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.error ?? UI_MESSAGES.LOGIN_FAILED
-        : UI_MESSAGES.LOGIN_FAILED
-      showToast(message, 'error')
-    } finally {
-      setIsAuthLoading(false)
-    }
-  }
-
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+  const handleLogout = () => {
+    logoutService()
     setToken('')
     setUser(null)
     setUploadedPdf(null)
     setSelectedPages([])
     setExtractedPdf(null)
+    setAuthMode('login')
+    setAuthEmail('')
+    setAuthOtp('')
   }
 
   const uploadPdf = (file: File) => {
@@ -376,22 +309,17 @@ function App() {
     setExtractedPdf(null)
 
     request.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        setUploadProgress(Math.round((event.loaded / event.total) * 100))
-      }
+      if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100))
     }
 
     request.onload = () => {
       setIsUploading(false)
-
       try {
         const response = JSON.parse(request.responseText)
-
         if (request.status >= 400) {
           showToast(response.error ?? UI_MESSAGES.UPLOAD_FAILED, 'error')
           return
         }
-
         setUploadedPdf(response)
         setSelectedPages([])
         setUploadProgress(100)
@@ -411,56 +339,38 @@ function App() {
 
   const handleFileInput = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-
-    if (file) {
-      uploadPdf(file)
-    }
+    if (file) uploadPdf(file)
   }
 
   const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
     event.preventDefault()
     setIsDragging(false)
-
     const file = event.dataTransfer.files[0]
-
-    if (file) {
-      uploadPdf(file)
-    }
+    if (file) uploadPdf(file)
   }
 
   const togglePage = (pageNumber: number) => {
-    setSelectedPages((currentPages) => {
-      if (currentPages.includes(pageNumber)) {
-        return currentPages.filter((page) => page !== pageNumber)
-      }
-
-      return [...currentPages, pageNumber]
-    })
+    setSelectedPages((prev) =>
+      prev.includes(pageNumber) ? prev.filter((p) => p !== pageNumber) : [...prev, pageNumber]
+    )
     setExtractedPdf(null)
   }
 
   const movePage = (pageNumber: number, direction: -1 | 1) => {
-    setSelectedPages((currentPages) => {
-      const index = currentPages.indexOf(pageNumber)
+    setSelectedPages((prev) => {
+      const index = prev.indexOf(pageNumber)
       const targetIndex = index + direction
-
-      if (index === -1 || targetIndex < 0 || targetIndex >= currentPages.length) {
-        return currentPages
-      }
-
-      const nextPages = [...currentPages]
-      nextPages[index] = currentPages[targetIndex]
-      nextPages[targetIndex] = pageNumber
-      return nextPages
+      if (index === -1 || targetIndex < 0 || targetIndex >= prev.length) return prev
+      const next = [...prev]
+      next[index] = prev[targetIndex]
+      next[targetIndex] = pageNumber
+      return next
     })
   }
 
   const selectAllPages = () => {
-    if (!uploadedPdf) {
-      return
-    }
-
-    setSelectedPages(Array.from({ length: uploadedPdf.pageCount }, (_, index) => index + 1))
+    if (!uploadedPdf) return
+    setSelectedPages(Array.from({ length: uploadedPdf.pageCount }, (_, i) => i + 1))
     setExtractedPdf(null)
   }
 
@@ -476,23 +386,19 @@ function App() {
       showToast(UI_MESSAGES.SELECT_PAGE_FIRST, 'error')
       return
     }
-
     setIsExtracting(true)
-
     try {
       const response = await axios.post<ExtractedPdf>(
         `${API_BASE_URL}${API_ENDPOINTS.PDFS.EXTRACT(uploadedPdf.id)}`,
         { pages: selectedPages },
         { headers: { [HTTP_HEADERS.AUTHORIZATION]: `${HTTP_HEADERS.BEARER} ${token}` } },
       )
-
       setExtractedPdf(response.data)
       showToast(UI_MESSAGES.EXTRACTION_SUCCESS, 'success')
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.EXTRACTION_FAILED
         : UI_MESSAGES.EXTRACTION_FAILED
-
       showToast(message, 'error')
     } finally {
       setIsExtracting(false)
@@ -503,6 +409,7 @@ function App() {
   const downloadUrl = extractedPdf ? getAssetUrl(extractedPdf.downloadUrl) : ''
   const selectedSummary = selectedPages.length > 0 ? selectedPages.join(', ') : 'No pages selected'
 
+  // ── Auth Screen ──────────────────────────────────────────────────────────
   if (!user) {
     return (
       <ErrorBoundary>
@@ -511,70 +418,100 @@ function App() {
             <div className="auth-brand">
               <ShieldCheck size={38} />
               <p className="eyebrow">Secure PDF Workspace</p>
-              <h1>{authMode === 'login' ? 'Login to continue.' : authMode === 'signup' ? 'Create your account.' : 'Verify your email.'}</h1>
+              <h1>
+                {authMode === 'login'
+                  ? 'Login to continue.'
+                  : authMode === 'signup'
+                  ? 'Create your account.'
+                  : 'Verify your email.'}
+              </h1>
             </div>
 
-            <div className="auth-tabs">
-              <button className={authMode === 'login' ? 'active' : ''} type="button" onClick={() => setAuthMode('login')}>
-                Login
-              </button>
-              <button className={authMode === 'signup' ? 'active' : ''} type="button" onClick={() => setAuthMode('signup')}>
-                Signup
-              </button>
-            </div>
+            {authMode !== 'verify' && (
+              <div className="auth-tabs">
+                <button className={authMode === 'login' ? 'active' : ''} type="button" onClick={() => setAuthMode('login')}>Login</button>
+                <button className={authMode === 'signup' ? 'active' : ''} type="button" onClick={() => setAuthMode('signup')}>Signup</button>
+              </div>
+            )}
 
             {authMode === 'signup' && (
               <label className="field">
                 <span>Name</span>
-                <input value={authName} onChange={(event) => setAuthName(event.target.value)} placeholder="Your name" />
+                <input id="auth-name" value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="Your name" />
               </label>
             )}
 
-            <label className="field">
-              <span>Email</span>
-              <input value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="you@example.com" />
-            </label>
-
             {authMode !== 'verify' && (
               <label className="field">
-                <span>Password</span>
-                <input type="password" value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} placeholder="At least 8 characters" />
+                <span>Email</span>
+                <input id="auth-email" type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="you@example.com" />
               </label>
             )}
 
             {authMode === 'verify' && (
               <>
+                <p style={{ marginBottom: 8, color: '#aaa', fontSize: '0.9rem' }}>
+                  We sent a code to <strong>{authEmail}</strong>
+                </p>
                 <label className="field">
-                  <span>OTP</span>
-                  <input value={authOtp} onChange={(event) => setAuthOtp(event.target.value)} placeholder="6 digit code" />
+                  <span>OTP Code</span>
+                  <input
+                    id="auth-otp"
+                    value={authOtp}
+                    onChange={(e) => setAuthOtp(e.target.value)}
+                    placeholder="6-digit code"
+                    maxLength={6}
+                    inputMode="numeric"
+                  />
                 </label>
-                {otpExpiryTimer !== null && otpExpiryTimer > 0 ? (
-                  <p className="timer-text" style={{ fontSize: '0.85rem', marginTop: '-10px', marginBottom: '10px', color: '#888' }}>OTP expires in {otpExpiryTimer}s</p>
-                ) : otpExpiryTimer !== null && otpExpiryTimer === 0 ? (
-                  <p className="timer-text" style={{ fontSize: '0.85rem', marginTop: '-10px', marginBottom: '10px', color: '#e74c3c' }}>OTP has expired</p>
-                ) : null}
-                {devOtp && <p className="dev-otp">Development OTP: {devOtp}</p>}
+                {otpExpiryTimer !== null && otpExpiryTimer > 0 && (
+                  <p className="timer-text" style={{ fontSize: '0.85rem', color: '#888', margin: '-8px 0 10px' }}>
+                    Code expires in {otpExpiryTimer}s
+                  </p>
+                )}
+                {otpExpiryTimer === 0 && (
+                  <p className="timer-text" style={{ fontSize: '0.85rem', color: '#e74c3c', margin: '-8px 0 10px' }}>
+                    Code expired — please resend
+                  </p>
+                )}
+                {devOtp && (
+                  <p className="dev-otp">Development OTP: <strong>{devOtp}</strong></p>
+                )}
               </>
             )}
 
             <button
+              id="auth-submit"
               className="primary-button wide"
               type="button"
               disabled={isAuthLoading}
               onClick={authMode === 'login' ? handleLogin : authMode === 'signup' ? handleSignup : handleVerifyOtp}
             >
               {isAuthLoading && <Loader2 className="spin" size={18} />}
-              {authMode === 'login' ? 'Login' : authMode === 'signup' ? 'Create account' : 'Verify account'}
+              {authMode === 'login' ? 'Send OTP' : authMode === 'signup' ? 'Create account & Send OTP' : 'Verify code'}
             </button>
 
             {authMode === 'verify' && (
-              <button 
-                className="ghost-button wide" 
-                type="button" 
-                disabled={isAuthLoading || (resendCooldown !== null && resendCooldown > 0)} 
+              <button
+                id="resend-otp"
+                className="ghost-button wide"
+                type="button"
+                disabled={isAuthLoading || (resendCooldown !== null && resendCooldown > 0)}
                 onClick={handleResendOtp}
+                style={{ marginTop: 10 }}
               >
-                {resendCooldown !== null && resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+                {resendCooldown && resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+              </button>
+            )}
+
+            {authMode === 'verify' && (
+              <button
+                className="ghost-button wide"
+                type="button"
+                style={{ marginTop: 6 }}
+                onClick={() => { setAuthMode('login'); setAuthOtp(''); setDevOtp(''); }}
+              >
+                ← Back
               </button>
             )}
           </section>
@@ -585,6 +522,7 @@ function App() {
     )
   }
 
+  // ── Workspace Screen ──────────────────────────────────────────────────────
   return (
     <ErrorBoundary>
       <main className="app-shell">
@@ -597,13 +535,11 @@ function App() {
           <div className="header-actions">
             {uploadedPdf && (
               <button className="ghost-button" type="button" onClick={resetWorkspace}>
-                <RotateCcw size={17} />
-                New file
+                <RotateCcw size={17} />New file
               </button>
             )}
-            <button className="ghost-button" type="button" onClick={logout}>
-              <LogOut size={17} />
-              Logout
+            <button className="ghost-button" type="button" onClick={handleLogout}>
+              <LogOut size={17} />Logout
             </button>
           </div>
         </section>
@@ -611,10 +547,7 @@ function App() {
         <section className="uploader-panel">
           <label
             className={`upload-zone ${isDragging ? 'dragging' : ''}`}
-            onDragOver={(event) => {
-              event.preventDefault()
-              setIsDragging(true)
-            }}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
           >
@@ -635,9 +568,7 @@ function App() {
                 <FileText size={22} />
                 <div>
                   <strong>{uploadedPdf.name}</strong>
-                  <span>
-                    {uploadedPdf.pageCount} pages · {formatFileSize(uploadedPdf.size)}
-                  </span>
+                  <span>{uploadedPdf.pageCount} pages · {formatFileSize(uploadedPdf.size)}</span>
                 </div>
               </>
             ) : (
@@ -660,32 +591,23 @@ function App() {
                 <span>{selectedSummary}</span>
               </div>
               <div className="toolbar-actions">
-                <button type="button" className="ghost-button" onClick={selectAllPages}>
-                  <Check size={17} />
-                  All
-                </button>
-                <button type="button" className="ghost-button" onClick={() => setSelectedPages([])}>
-                  <X size={17} />
-                  Clear
-                </button>
+                <button type="button" className="ghost-button" onClick={selectAllPages}><Check size={17} />All</button>
+                <button type="button" className="ghost-button" onClick={() => setSelectedPages([])}><X size={17} />Clear</button>
                 <button className="primary-button" type="button" onClick={extractPages} disabled={isExtracting}>
-                  {isExtracting ? <Loader2 className="spin" size={18} /> : <Scissors size={18} />}
-                  Extract
+                  {isExtracting ? <Loader2 className="spin" size={18} /> : <Scissors size={18} />}Extract
                 </button>
                 {extractedPdf && (
                   <a className="download-button" href={downloadUrl} download={extractedPdf.fileName}>
-                    <Download size={18} />
-                    Download
+                    <Download size={18} />Download
                   </a>
                 )}
               </div>
             </section>
 
             <section className="page-grid" aria-label="PDF pages">
-              {Array.from({ length: uploadedPdf.pageCount }, (_, index) => {
-                const pageNumber = index + 1
+              {Array.from({ length: uploadedPdf.pageCount }, (_, i) => {
+                const pageNumber = i + 1
                 const selectedIndex = selectedPages.indexOf(pageNumber)
-
                 return (
                   <PageCard
                     key={pageNumber}

@@ -2,86 +2,64 @@ import type { NextFunction, Request, Response } from 'express';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
 import type { ErrorResponseDto } from '../contracts/mappers.js';
-import type { AuthResponse, IAuthService } from '../contracts/services.js';
-import type { IAuthDtoValidator } from '../contracts/validators.js';
-import type { IAuthController } from '../contracts/controllers.js';
 import type { AuthenticatedRequest } from '../middleware/authenticate.js';
 import { sendError, sendSuccess } from '../utils/responseSender.js';
+import type { AuthService } from '../services/authService.js';
+import type { PublicUser } from '../types/models.js';
 
-/**
- * ARCHITECTURE: CONTROLLER LAYER
- * Purpose: Validate DTOs, call services, and shape HTTP responses.
- */
-export class AuthController implements IAuthController {
-  constructor(
-    private readonly _service: IAuthService,
-    private readonly _validator: IAuthDtoValidator
-  ) {}
+export class AuthController {
+  constructor(private readonly _service: AuthService) {}
 
-  signup = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
+  signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const dto = this._validator.validateSignup(req.body);
-      const result = await this._service.signup(dto);
+      const { name, email } = req.body;
+      if (!name || !email) {
+        sendError(res, STATUS_CODES.BAD_REQUEST, 'Name and email are required');
+        return;
+      }
+      const result = await this._service.signup({ name, email });
       sendSuccess(res, STATUS_CODES.CREATED, result);
     } catch (error) {
       next(error);
     }
   };
 
-  verifyOtp = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
+  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const dto = this._validator.validateVerifyOtp(req.body);
-      const result = await this._service.verifyOtp(dto);
+      const { email } = req.body;
+      if (!email) {
+        sendError(res, STATUS_CODES.BAD_REQUEST, 'Email is required');
+        return;
+      }
+      const result = await this._service.login({ email });
       sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
   };
 
-  resendOtp = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
+  verifyOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const dto = this._validator.validateResendOtp(req.body);
-      const result = await this._service.resendOtp(dto);
+      const { email, otp } = req.body;
+      if (!email || !otp) {
+        sendError(res, STATUS_CODES.BAD_REQUEST, 'Email and OTP are required');
+        return;
+      }
+      const result = await this._service.verifyOtp({ email, otp });
       sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
     }
   };
 
-  login = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
+  resendOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const dto = this._validator.validateLogin(req.body);
-      const result = await this._service.login(dto);
-      sendSuccess(res, STATUS_CODES.OK, result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  refreshToken = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
-    try {
-      const dto = this._validator.validateRefreshToken(req.body);
-      const result = await this._service.refreshToken(dto);
-      sendSuccess(res, STATUS_CODES.OK, result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  forgotPassword = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
-    try {
-      const dto = this._validator.validateForgotPassword(req.body);
-      const result = await this._service.forgotPassword(dto);
-      sendSuccess(res, STATUS_CODES.OK, result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  resetPassword = async (req: Request, res: Response<AuthResponse>, next: NextFunction): Promise<void> => {
-    try {
-      const dto = this._validator.validateResetPassword(req.body);
-      const result = await this._service.resetPassword(dto);
+      const { email } = req.body;
+      if (!email) {
+        sendError(res, STATUS_CODES.BAD_REQUEST, 'Email is required');
+        return;
+      }
+      const result = await this._service.resendOtp({ email });
       sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
@@ -90,31 +68,17 @@ export class AuthController implements IAuthController {
 
   updateProfile = async (
     req: AuthenticatedRequest,
-    res: Response<{ user: AuthResponse['user'] } | ErrorResponseDto>,
+    res: Response<{ user: PublicUser } | ErrorResponseDto>,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const dto = this._validator.validateUpdateProfile(req.body);
+      const body = req.body as { name?: string };
       const profilePhotoUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-      const result = await this._service.updateProfile(req.user.userId, {
-        ...dto,
+      const user = await this._service.updateProfile(req.user.userId, {
+        name: body.name,
         profilePhotoUrl
       });
-      sendSuccess(res, STATUS_CODES.OK, { user: result });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  changePassword = async (
-    req: AuthenticatedRequest,
-    res: Response<AuthResponse>,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const dto = this._validator.validateChangePassword(req.body);
-      const result = await this._service.changePassword(req.user.userId, dto);
-      sendSuccess(res, STATUS_CODES.OK, result);
+      sendSuccess(res, STATUS_CODES.OK, { user });
     } catch (error) {
       next(error);
     }
@@ -122,17 +86,15 @@ export class AuthController implements IAuthController {
 
   me = async (
     req: AuthenticatedRequest,
-    res: Response<{ user: AuthResponse['user'] } | ErrorResponseDto>,
+    res: Response<{ user: PublicUser } | ErrorResponseDto>,
     next: NextFunction
   ): Promise<void> => {
     try {
       const user = await this._service.getUserById(req.user.userId);
-
       if (!user) {
         sendError(res, STATUS_CODES.NOT_FOUND, AUTH_MESSAGES.USER_NOT_FOUND);
         return;
       }
-
       sendSuccess(res, STATUS_CODES.OK, { user });
     } catch (error) {
       next(error);
