@@ -163,7 +163,6 @@ function App() {
   const [authName, setAuthName] = useState('')
   const [authEmail, setAuthEmail] = useState('')
   const [authOtp, setAuthOtp] = useState('')
-  const [devOtp, setDevOtp] = useState('')
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [uploadedPdf, setUploadedPdf] = useState<UploadedPdf | null>(null)
   const [selectedPages, setSelectedPages] = useState<number[]>([])
@@ -208,7 +207,6 @@ function App() {
     try {
       const res = await signup(authName, authEmail)
       setAuthMode('verify')
-      setDevOtp(res.devOtp ?? '')
       setOtpExpiryTimer(300)      // 5 min
       setResendCooldown(60)       // 60s cooldown
       showToast(res.message, 'success')
@@ -227,7 +225,6 @@ function App() {
     try {
       const res = await login(authEmail)
       setAuthMode('verify')
-      setDevOtp(res.devOtp ?? '')
       setOtpExpiryTimer(300)
       setResendCooldown(60)
       showToast(res.message, 'success')
@@ -265,7 +262,6 @@ function App() {
     setIsAuthLoading(true)
     try {
       const res = await resendOtp(authEmail)
-      setDevOtp(res.devOtp ?? '')
       setAuthOtp('')
       setOtpExpiryTimer(300)
       setResendCooldown(60)
@@ -474,9 +470,6 @@ function App() {
                     Code expired — please resend
                   </p>
                 )}
-                {devOtp && (
-                  <p className="dev-otp">Development OTP: <strong>{devOtp}</strong></p>
-                )}
               </>
             )}
 
@@ -509,7 +502,7 @@ function App() {
                 className="ghost-button wide"
                 type="button"
                 style={{ marginTop: 6 }}
-                onClick={() => { setAuthMode('login'); setAuthOtp(''); setDevOtp(''); }}
+                onClick={() => { setAuthMode('login'); setAuthOtp(''); }}
               >
                 ← Back
               </button>
