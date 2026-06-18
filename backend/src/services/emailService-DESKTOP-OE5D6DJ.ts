@@ -1,9 +1,14 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { SMTP_DEFAULTS } from '../constants/config.js';
-import { SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IEmailService, SendOtpResult } from '../contracts/services.js';
 
 export class EmailService implements IEmailService {
+  private resend: Resend;
+
+  constructor() {
+    this.resend = new Resend(process.env.RESEND_API_KEY || 'dev_key');
+  }
+
   async sendOtp(email: string, otp: string): Promise<SendOtpResult> {
     return this.sendOtpMail(email, otp, 'Verify your PDF Extractor account');
   }
@@ -13,32 +18,35 @@ export class EmailService implements IEmailService {
   }
 
   private async sendOtpMail(email: string, otp: string, subject: string): Promise<SendOtpResult> {
-    const host = process.env.SMTP_HOST;
-    const port = Number(process.env.SMTP_PORT || SMTP_DEFAULTS.PORT);
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-    const from = process.env.SMTP_FROM || user;
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-    if (!host || !user || !pass || !from) {
-      console.log(SYSTEM_MESSAGES.DEV_OTP_LOG.replace('{email}', email).replace('{otp}', otp));
+    if (!apiKey) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('RESEND_API_KEY is required in production');
+      }
+      console.log(`[DEV MODE] Email to ${email}: ${otp}`);
       return { delivered: false, devMode: true };
     }
 
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === SMTP_DEFAULTS.SECURE_PORT,
-      auth: { user, pass }
-    });
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: from,
+        to: [email],
+        subject,
+        text: `Your verification OTP is ${otp}. It expires in 10 minutes.`,
+        html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in 10 minutes.</p>`
+      });
 
-    await transporter.sendMail({
-      from,
-      to: email,
-      subject,
-      text: `Your verification OTP is ${otp}. It expires in 10 minutes.`,
-      html: `<p>Your verification OTP is <strong>${otp}</strong>.</p><p>It expires in 10 minutes.</p>`
-    });
+      if (error) {
+        throw new Error(error.message);
+      }
 
-    return { delivered: true, devMode: false };
+      console.log(`Email sent via Resend. ID: ${data?.id}`);
+      return { delivered: true, devMode: false };
+    } catch (error) {
+      console.error('Resend dispatch failed:', error);
+      throw new Error('Failed to dispatch email. Please ensure SMTP configurations are correct.');
+    }
   }
 }
