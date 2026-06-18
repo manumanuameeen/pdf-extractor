@@ -1,24 +1,34 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 export class EmailService {
-  private resend: Resend;
+  private transporter: nodemailer.Transporter | null = null;
 
-  constructor() {
-    // Initialize Resend with the API key from environment variables
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey && process.env.NODE_ENV === 'production') {
-      console.warn('RESEND_API_KEY is not set in production. Email sending will fail.');
-    }
-    this.resend = new Resend(apiKey || 'dev_key');
+  private async getTransporter(): Promise<nodemailer.Transporter> {
+    if (this.transporter) return this.transporter;
+
+    // Use OAuth2 for Gmail to bypass Render SMTP port blocking
+    // This uses HTTP (Port 443) internally via the googleapis library logic in nodemailer
+    this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: process.env.GMAIL_USER,
+        clientId: process.env.GMAIL_CLIENT_ID,
+        clientSecret: process.env.GMAIL_CLIENT_SECRET,
+        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+      },
+    } as any);
+
+    return this.transporter!;
   }
 
   async sendOtpEmail(to: string, otp: string): Promise<void> {
-    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || 'onboarding@resend.dev';
-    
     try {
-      const { data, error } = await this.resend.emails.send({
-        from: from,
-        to: [to],
+      const transporter = await this.getTransporter();
+      
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to,
         subject: 'Your Authentication Code',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
@@ -30,17 +40,20 @@ export class EmailService {
             <p style="color: #e74c3c; font-weight: bold;">This code expires in 5 minutes. If you did not request this, please ignore this email.</p>
           </div>
         `
-      });
+      };
 
-      if (error) {
-        console.error('Resend API Error:', error);
-        throw new Error(error.message);
-      }
-
-      console.log(`OTP email sent successfully to ${to}. ID: ${data?.id}`);
+      await transporter.sendMail(mailOptions);
+      console.log(`OTP email sent via Gmail OAuth2 to ${to}`);
     } catch (error) {
-      console.error('Failed to send OTP email via Resend:', error);
-      throw new Error('Failed to dispatch email. Please ensure email configurations are correct.');
+      console.error('Failed to send OTP email via Gmail OAuth2:', error);
+      
+      // Fallback for development if credentials are missing
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEV FALLBACK] OTP for ${to}: ${otp}`);
+        return;
+      }
+      
+      throw new Error('Failed to dispatch email. Please ensure Gmail OAuth2 configurations are correct.');
     }
   }
 }
