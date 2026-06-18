@@ -25,6 +25,8 @@ export class PdfRoutes implements IRouteBuilder {
     this.router.post(PDF_ROUTES.UPLOAD, this._authenticateRequest, this._uploadMiddleware.single('pdf'), this._controller.uploadPdf as RequestHandler);
     this.router.get(PDF_ROUTES.BY_ID, this._authenticateRequest, this._controller.getPdf as RequestHandler);
     this.router.post(PDF_ROUTES.EXTRACT, this._authenticateRequest, this._controller.extractPdfPages as RequestHandler);
+    this.router.get(PDF_ROUTES.LIST, this._authenticateRequest, this._controller.listUserPdfs as RequestHandler);
+    this.router.delete(PDF_ROUTES.DELETE, this._authenticateRequest, this._controller.deletePdf as RequestHandler);
   }
 }
 

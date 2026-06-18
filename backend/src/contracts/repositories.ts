@@ -13,4 +13,6 @@ export interface IUserRepository extends IRepository<UserRecord> {
 
 export interface IPdfRepository extends IRepository<PdfRecord> {
   findOwnedByUser(id: string, userId: string): Promise<PdfRecord | null>;
+  findByUserId(userId: string): Promise<PdfRecord[]>;
+  delete(id: string): Promise<boolean>;
 }

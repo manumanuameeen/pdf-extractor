@@ -49,6 +49,9 @@ export interface IPdfService {
   extractPages(sourcePath: string, pageIndices: number[]): Promise<Buffer>;
   validatePageRange(sourcePath: string, pageIndices: number[]): Promise<PdfMetadata>;
   getMetadata(sourcePath: string): Promise<PdfMetadata>;
+  savePdfRecord(userId: string, originalName: string, size: number, pageCount: number, path: string): Promise<PdfRecord>;
+  getUserPdfs(userId: string): Promise<PdfRecord[]>;
+  deleteUserPdf(id: string, userId: string): Promise<boolean>;
 }
 
 export interface IEmailService {

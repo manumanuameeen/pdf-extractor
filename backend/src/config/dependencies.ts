@@ -33,7 +33,7 @@ class AppDependencies {
 
   readonly emailService = new EmailService();
   readonly authService = new AuthService(this.userRepository, this.emailService, this.userMapper);
-  readonly pdfService = new PdfService();
+  readonly pdfService = new PdfService(this.pdfRepository);
 
   readonly authController = new AuthController(this.authService);
   readonly pdfController = new PdfController(

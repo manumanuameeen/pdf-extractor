@@ -63,7 +63,7 @@ export class AuthService {
 
     await redis.set(redisKey, JSON.stringify(payload), 'EX', this.OTP_TTL);
     
-    await this._emailService.sendOtpEmail(email, code);
+    await this._emailService.sendOtp(email, code);
 
     // Development helper
     const isDev = process.env.NODE_ENV !== 'production';

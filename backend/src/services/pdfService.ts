@@ -1,16 +1,22 @@
 import fs from 'node:fs/promises';
+import crypto from 'node:crypto';
 import { PDFDocument } from 'pdf-lib';
 import { PDF_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IPdfService, PdfMetadata } from '../contracts/services.js';
+import type { IPdfRepository } from '../contracts/repositories.js';
+import type { PdfRecord } from '../types/models.js';
 
 /**
  * ARCHITECTURE: SERVICE LAYER
  * Purpose: Keep PDF business logic independent from Express HTTP details.
  */
 export class PdfService implements IPdfService {
+  constructor(private readonly _repository: IPdfRepository) {}
+
   /**
    * Extracts selected pages and creates a new PDF.
    * pageIndices are zero-based because pdf-lib uses zero-based page positions.
+   * Supports rearrangement based on the order of indices in the array.
    */
   async extractPages(sourcePath: string, pageIndices: number[]): Promise<Buffer> {
     try {
@@ -19,9 +25,12 @@ export class PdfService implements IPdfService {
       const sourceBytes = await fs.readFile(sourcePath);
       const sourcePdf = await PDFDocument.load(sourceBytes);
       const outputPdf = await PDFDocument.create();
-      const copiedPages = await outputPdf.copyPages(sourcePdf, pageIndices);
-
-      copiedPages.forEach((page) => outputPdf.addPage(page));
+      
+      // Rearrangement happens here: we copy and add pages in the order they appear in pageIndices
+      for (const index of pageIndices) {
+        const [copiedPage] = await outputPdf.copyPages(sourcePdf, [index]);
+        outputPdf.addPage(copiedPage);
+      }
 
       const pdfBytes = await outputPdf.save();
       return Buffer.from(pdfBytes);
@@ -60,6 +69,39 @@ export class PdfService implements IPdfService {
       pageCount: sourcePdf.getPageCount()
     };
   }
-}
 
-export default new PdfService();
+  async savePdfRecord(userId: string, originalName: string, size: number, pageCount: number, path: string): Promise<PdfRecord> {
+    const record: PdfRecord = {
+      id: crypto.randomUUID(),
+      userId,
+      originalName,
+      size,
+      pageCount,
+      path,
+      createdAt: new Date().toISOString()
+    };
+
+    return await this._repository.save(record);
+  }
+
+  async getUserPdfs(userId: string): Promise<PdfRecord[]> {
+    return await this._repository.findByUserId(userId);
+  }
+
+  async deleteUserPdf(id: string, userId: string): Promise<boolean> {
+    const pdf = await this._repository.findOwnedByUser(id, userId);
+    if (!pdf) {
+      return false;
+    }
+
+    try {
+      // Delete physical file
+      await fs.unlink(pdf.path).catch(() => {});
+      // Delete database record
+      return await this._repository.delete(id);
+    } catch (error) {
+      console.error('Error deleting PDF:', error);
+      return false;
+    }
+  }
+}

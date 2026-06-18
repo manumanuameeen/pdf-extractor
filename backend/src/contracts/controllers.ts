@@ -26,4 +26,6 @@ export interface IPdfController {
   uploadPdf(req: AuthenticatedRequest, res: Response<UploadPdfResponseDto | ErrorResponseDto>, next: NextFunction): Promise<void>;
   extractPdfPages(req: AuthenticatedRequest<{ id: string }>, res: Response<ExtractPdfResponseDto | ErrorResponseDto>, next: NextFunction): Promise<void>;
   getPdf(req: AuthenticatedRequest<{ id: string }>, res: Response, next: NextFunction): Promise<void>;
+  listUserPdfs(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
+  deletePdf(req: AuthenticatedRequest<{ id: string }>, res: Response, next: NextFunction): Promise<void>;
 }

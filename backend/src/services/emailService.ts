@@ -19,7 +19,7 @@ export class EmailService {
     return data.access_token;
   }
 
-  async sendOtpEmail(to: string, otp: string): Promise<void> {
+  async sendOtp(to: string, otp: string): Promise<{ delivered: boolean, devMode: boolean }> {
     try {
       const accessToken = await this.getAccessToken();
       const userEmail = process.env.GMAIL_USER;
@@ -74,13 +74,18 @@ export class EmailService {
       }
 
       console.log(`OTP email sent via Gmail HTTP API to ${to}`);
+      return { delivered: true, devMode: false };
     } catch (error) {
       console.error('Failed to send OTP email via Gmail HTTP API:', error);
       if (process.env.NODE_ENV !== 'production') {
         console.log(`[DEV FALLBACK] OTP for ${to}: ${otp}`);
-        return;
+        return { delivered: false, devMode: true };
       }
       throw new Error('Failed to dispatch email. Please ensure Gmail OAuth2 configurations are correct.');
     }
+  }
+
+  async sendPasswordResetOtp(to: string, otp: string): Promise<{ delivered: boolean, devMode: boolean }> {
+    return this.sendOtp(to, otp);
   }
 }

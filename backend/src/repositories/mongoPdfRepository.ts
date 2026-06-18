@@ -5,7 +5,7 @@ import type { PdfRecord } from '../types/models.js';
 export class MongoPdfRepository implements IPdfRepository {
   private mapToPdfRecord(doc: any): PdfRecord {
     return {
-      id: doc._id,
+      id: doc._id || doc.id,
       userId: doc.userId,
       originalName: doc.originalName,
       size: doc.size,
@@ -30,6 +30,11 @@ export class MongoPdfRepository implements IPdfRepository {
     return doc ? this.mapToPdfRecord(doc) : null;
   }
 
+  async findByUserId(userId: string): Promise<PdfRecord[]> {
+    const docs = await Pdf.find({ userId }).sort({ createdAt: -1 });
+    return docs.map(doc => this.mapToPdfRecord(doc));
+  }
+
   async save(record: PdfRecord): Promise<PdfRecord> {
     const doc = {
       _id: record.id,
@@ -42,5 +47,10 @@ export class MongoPdfRepository implements IPdfRepository {
 
     await Pdf.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
     return record;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await Pdf.deleteOne({ _id: id });
+    return result.deletedCount > 0;
   }
 }

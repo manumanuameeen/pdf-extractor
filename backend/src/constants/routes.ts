@@ -20,5 +20,7 @@ export const AUTH_ROUTES = {
 export const PDF_ROUTES = {
   UPLOAD: '/upload',
   BY_ID: '/:id',
-  EXTRACT: '/:id/extract'
+  EXTRACT: '/:id/extract',
+  LIST: '/',
+  DELETE: '/:id'
 } as const;
