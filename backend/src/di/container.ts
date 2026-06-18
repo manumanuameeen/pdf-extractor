@@ -45,7 +45,7 @@ class DIContainer {
   }
 
   get pdfService(): IPdfService {
-    this._pdfService ??= new PdfService();
+    this._pdfService ??= new PdfService(this.pdfRepository);
     return this._pdfService;
   }
 

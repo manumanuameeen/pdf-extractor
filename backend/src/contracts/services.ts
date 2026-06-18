@@ -9,7 +9,7 @@ import type {
   UpdateProfileDto,
   VerifyOtpDto
 } from '../dtos/authDtos.js';
-import type { AuthTokenPayload, PublicUser } from '../types/models.js';
+import type { AuthTokenPayload, PublicUser, PdfRecord } from '../types/models.js';
 
 export type AuthResponse = {
   message: string;
