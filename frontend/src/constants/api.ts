@@ -13,6 +13,9 @@ export const API_ENDPOINTS = {
   PDFS: {
     UPLOAD: '/api/pdfs/upload',
     EXTRACT: (id: string) => `/api/pdfs/${id}/extract`,
+    LIST: '/api/pdfs',
+    BY_ID: (id: string) => `/api/pdfs/${id}`,
+    DELETE: (id: string) => `/api/pdfs/${id}`,
   },
 } as const;
 

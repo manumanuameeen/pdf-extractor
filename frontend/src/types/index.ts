@@ -15,6 +15,10 @@ export type UploadedPdf = {
   previewUrl: string;
 };
 
+export type SavedPdf = UploadedPdf & {
+  createdAt: string;
+};
+
 export type ExtractedPdf = {
   fileName: string;
   pageCount: number;

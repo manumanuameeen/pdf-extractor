@@ -1,31 +1,13 @@
-import { Component, type ChangeEvent, type DragEvent, type ErrorInfo, type ReactNode, useEffect, useRef, useState } from 'react'
+import { Component, type ChangeEvent, type DragEvent, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
-import * as pdfjsLib from 'pdfjs-dist'
 import { ArrowDown, ArrowUp, Check, Download, FileText, Loader2, LogOut, RotateCcw, Scissors, ShieldCheck, UploadCloud, X } from 'lucide-react'
 import { API_BASE_URL, API_ENDPOINTS, HTTP_HEADERS, STORAGE_KEYS } from './constants/api'
 import { UI_MESSAGES } from './constants/messages'
 import { signup, login, verifyOtp, resendOtp, getProfile, logout as logoutService, type User } from './services/authService'
+import { getUserPdfs, deletePdf } from './services/pdfService'
+import type { ExtractedPdf, SavedPdf, UploadedPdf } from './types'
 import './App.css'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url,
-).toString()
-
-type UploadedPdf = {
-  id: string
-  name: string
-  size: number
-  pageCount: number
-  previewUrl: string
-}
-
-type ExtractedPdf = {
-  fileName: string
-  pageCount: number
-  downloadUrl: string
-}
 
 type ToastState = {
   tone: 'success' | 'error'
@@ -100,6 +82,12 @@ function PageCard({
       const context = canvas?.getContext('2d')
       if (!canvas || !context) return
 
+      const pdfjsLib = await import('pdfjs-dist')
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.mjs',
+        import.meta.url,
+      ).toString()
+
       const loadingTask = pdfjsLib.getDocument({
         url: pdfUrl,
         httpHeaders: { [HTTP_HEADERS.AUTHORIZATION]: `${HTTP_HEADERS.BEARER} ${token}` },
@@ -171,6 +159,8 @@ function App() {
   const [isUploading, setIsUploading] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractedPdf, setExtractedPdf] = useState<ExtractedPdf | null>(null)
+  const [userPdfs, setUserPdfs] = useState<SavedPdf[]>([])
+  const [libraryLoading, setLibraryLoading] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [otpExpiryTimer, setOtpExpiryTimer] = useState<number | null>(null)
   const [resendCooldown, setResendCooldown] = useState<number | null>(null)
@@ -179,6 +169,19 @@ function App() {
     setToast({ message, tone })
     window.setTimeout(() => setToast(null), 3600)
   }
+
+  const loadUserPdfs = useCallback(async () => {
+    if (!token) return
+    setLibraryLoading(true)
+    try {
+      const pdfs = await getUserPdfs()
+      setUserPdfs(pdfs)
+    } catch {
+      showToast(UI_MESSAGES.LIBRARY_LOAD_FAILED, 'error')
+    } finally {
+      setLibraryLoading(false)
+    }
+  }, [token])
 
   // OTP countdown timers
   useEffect(() => {
@@ -194,13 +197,16 @@ function App() {
   useEffect(() => {
     if (!token) return
     getProfile()
-      .then((u) => setUser(u))
+      .then((u) => {
+        setUser(u)
+        void loadUserPdfs()
+      })
       .catch(() => {
         localStorage.removeItem(STORAGE_KEYS.TOKEN)
         setToken('')
         setUser(null)
       })
-  }, [token])
+  }, [token, loadUserPdfs])
 
   const handleSignup = async () => {
     setIsAuthLoading(true)
@@ -245,6 +251,7 @@ function App() {
       if (res.token && res.user) {
         setToken(res.token)
         setUser(res.user)
+        void loadUserPdfs()
       }
       showToast(res.message, 'success')
     } catch (error) {
@@ -283,9 +290,29 @@ function App() {
     setUploadedPdf(null)
     setSelectedPages([])
     setExtractedPdf(null)
+    setUserPdfs([])
     setAuthMode('login')
     setAuthEmail('')
     setAuthOtp('')
+  }
+
+  const handleSelectLibraryPdf = (pdf: SavedPdf) => {
+    setUploadedPdf(pdf)
+    setSelectedPages([])
+    setExtractedPdf(null)
+  }
+
+  const handleDeleteLibraryPdf = async (pdfId: string) => {
+    try {
+      await deletePdf(pdfId)
+      showToast(UI_MESSAGES.PDF_DELETED, 'success')
+      if (uploadedPdf?.id === pdfId) {
+        resetWorkspace()
+      }
+      await loadUserPdfs()
+    } catch {
+      showToast(UI_MESSAGES.PDF_DELETE_FAILED, 'error')
+    }
   }
 
   const uploadPdf = (file: File) => {
@@ -320,6 +347,7 @@ function App() {
         setSelectedPages([])
         setUploadProgress(100)
         showToast(UI_MESSAGES.PDF_UPLOADED, 'success')
+        void loadUserPdfs()
       } catch {
         showToast(UI_MESSAGES.UPLOAD_UNEXPECTED_RESPONSE, 'error')
       }
@@ -391,6 +419,7 @@ function App() {
       )
       setExtractedPdf(response.data)
       showToast(UI_MESSAGES.EXTRACTION_SUCCESS, 'success')
+      void loadUserPdfs()
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.error ?? UI_MESSAGES.EXTRACTION_FAILED
@@ -574,6 +603,46 @@ function App() {
               </>
             )}
           </div>
+        </section>
+
+        <section className="library-panel">
+          <header>
+            <div>
+              <p className="eyebrow">My PDF Library</p>
+              <h2>Saved files for {user?.name}</h2>
+            </div>
+          </header>
+
+          {libraryLoading ? (
+            <div className="library-empty">Loading your saved PDFs…</div>
+          ) : userPdfs.length === 0 ? (
+            <div className="library-empty">
+              No saved PDFs yet. Every uploaded or extracted file appears here once the server stores it.
+            </div>
+          ) : (
+            <div className="library-grid">
+              {userPdfs.map((pdf) => (
+                <article key={pdf.id} className="library-card">
+                  <div className="library-info">
+                    <strong>{pdf.name}</strong>
+                    <span className="library-meta">
+                      {pdf.pageCount} pages · {formatFileSize(pdf.size)}
+                      <br />
+                      Saved {new Date(pdf.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="library-actions">
+                    <button type="button" className="ghost-button" onClick={() => handleSelectLibraryPdf(pdf)}>
+                      Load
+                    </button>
+                    <button type="button" className="ghost-button" onClick={() => handleDeleteLibraryPdf(pdf.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         {uploadedPdf ? (

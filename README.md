@@ -58,11 +58,18 @@ The backend includes a comprehensive test suite using the Node.js native test ru
 cd backend
 npm test
 ```
+The frontend includes a baseline Vitest suite for the authentication and library UI:
+```bash
+cd frontend
+npm test
+```
+
 Tests cover:
 - PDF page extraction and rearrangement.
 - Page range validation.
 - DTO and input validation.
 - Auth service logic.
+- Frontend login screen rendering.
 
 ## 📸 Screenshots
 

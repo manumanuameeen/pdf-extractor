@@ -12,4 +12,7 @@ export const UI_MESSAGES = {
   SELECT_PAGE_FIRST: 'Select at least one page first.',
   EXTRACTION_SUCCESS: 'New PDF created. Download is ready.',
   EXTRACTION_FAILED: 'Extraction failed.',
+  LIBRARY_LOAD_FAILED: 'Could not load your PDF library.',
+  PDF_DELETED: 'PDF deleted successfully.',
+  PDF_DELETE_FAILED: 'Could not delete the PDF.',
 } as const;
