@@ -3,7 +3,7 @@
 A professional full-stack PDF manipulation application with secure authentication and persistent user storage. Users can sign up, verify email OTP, manage their own PDF library, extract/reorder pages, and maintain a history of their extractions.
 
 ## 🚀 Live Demo
-- **Frontend:** [https://pdf-extractor-client.vercel.app](https://pdf-extractor-client.vercel.app)
+- **Frontend:** [https://pdf-extractor-wine.vercel.app/](https://pdf-extractor-wine.vercel.app/)
 - **Backend API:** [https://pdf-extractor-backend-eju1.onrender.com](https://pdf-extractor-backend-eju1.onrender.com)
 
 ## ✨ Features
