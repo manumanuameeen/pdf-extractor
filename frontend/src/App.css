@@ -501,24 +501,138 @@ button:disabled {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  max-width: min(360px, calc(100% - 32px));
+  max-width: min(380px, calc(100% - 32px));
   z-index: 30;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 14px 18px;
   color: var(--text-strong);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .toast.success {
-  background: rgba(34, 197, 94, 0.18);
-  border-color: rgba(34, 197, 94, 0.38);
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #a7f3d0;
 }
 
 .toast.error {
-  background: rgba(251, 113, 133, 0.18);
-  border-color: rgba(251, 113, 133, 0.38);
+  background: rgba(251, 113, 133, 0.14);
+  border-color: rgba(251, 113, 133, 0.3);
+  color: #fecdd3;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+}
+
+.toast-message {
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  min-height: unset;
+  width: unset;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.toast-close:hover {
+  color: var(--text-strong);
+  background: rgba(255, 255, 255, 0.08);
+  transform: none;
+}
+
+/* OTP Form styles */
+.otp-verify-form {
+  display: grid;
+  gap: 16px;
+}
+
+.otp-instruction {
+  font-size: 0.94rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.otp-instruction strong {
+  color: var(--text-strong);
+}
+
+.otp-input-field {
+  text-align: center;
+  letter-spacing: 0.35em !important;
+  font-size: 1.7rem !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-weight: 700;
+}
+
+.otp-timer-row {
+  display: flex;
+  justify-content: center;
+  min-height: 20px;
+}
+
+.otp-timer {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.otp-timer.expired {
+  color: var(--pink);
+}
+
+.otp-action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.otp-action-buttons button {
+  flex: 1;
+}
+
+.auth-logo-glow {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(117, 225, 255, 0.08);
+  border: 1px solid rgba(117, 225, 255, 0.2);
+  box-shadow: 0 0 25px rgba(117, 225, 255, 0.12);
+  margin-bottom: 8px;
+  color: var(--cyan);
+}
+
+button:active {
+  transform: translateY(1px) scale(0.98);
 }
 
 .spin {
@@ -563,3 +677,4 @@ button:disabled {
     gap: 12px;
   }
 }
+

@@ -23,6 +23,16 @@ import type { IUserRepository, IPdfRepository } from '../contracts/repositories.
  * Purpose: Build concrete dependencies once and expose fully wired app layers.
  */
 class AppDependencies {
+  /**
+   * PERSISTENCE LAYER CONFIGURATION
+   * 
+   * The backend supports two storage engines: MongoDB (Production/Staging) and JSON file fallback (Local Dev).
+   * Here, we check for the existence of MONGODB_URI in the environment variables:
+   * - If MONGODB_URI exists: We connect to the remote MongoDB instance using Mongoose and use Mongo-based repositories.
+   * - If MONGODB_URI is empty: We fall back to saving/reading data inside the local 'data/' folder using JSON files.
+   * 
+   * Since process.env.MONGODB_URI is defined in .env, MongoDB is used automatically to persist all data.
+   */
   readonly userRepository: IUserRepository = process.env.MONGODB_URI ? new MongoUserRepository() : new UserRepository();
   readonly pdfRepository: IPdfRepository = process.env.MONGODB_URI ? new MongoPdfRepository() : new PdfRepository();
 

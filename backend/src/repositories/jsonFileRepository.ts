@@ -19,8 +19,8 @@ export class JsonFileRepository<TRecord extends { id: string }> implements IRepo
     await this.ensureFile();
     const content = await fs.readFile(this._filePath, 'utf8');
     return JSON.parse(content) as TRecord[];
-  }
-
+  } 
+  
   async findById(id: string): Promise<TRecord | null> {
     const records = await this.findAll();
     return records.find((record) => record.id === id) ?? null;

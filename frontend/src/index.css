@@ -1,27 +1,45 @@
 :root {
-  --bg: #080a12;
-  --surface: #111827;
-  --glass: rgba(16, 24, 39, 0.78);
-  --border: rgba(255, 255, 255, 0.12);
-  --text: #d7deea;
-  --text-muted: #8f9db4;
-  --text-strong: #f8fbff;
-  --cyan: #75e1ff;
-  --pink: #ff79c6;
-  --mint: #74f0b5;
-  --shadow: 0 22px 80px rgba(0, 0, 0, 0.35);
-  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg: #060810;
+  --surface: #0f1422;
+  --glass: rgba(13, 19, 33, 0.74);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #c5d1e6;
+  --text-muted: #7b8eaf;
+  --text-strong: #ffffff;
+  --cyan: #5ce1e6;
+  --pink: #ff66c4;
+  --mint: #3bf49e;
+  --shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  --font: 'Outfit', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--text);
   background:
-    linear-gradient(135deg, rgba(117, 225, 255, 0.12) 0%, transparent 32%),
-    linear-gradient(225deg, rgba(255, 121, 198, 0.1) 0%, transparent 34%),
-    linear-gradient(135deg, #080a12 0%, #111525 48%, #0b1721 100%);
+    linear-gradient(135deg, rgba(92, 225, 230, 0.09) 0%, transparent 40%),
+    linear-gradient(225deg, rgba(255, 102, 196, 0.08) 0%, transparent 40%),
+    linear-gradient(135deg, #060810 0%, #0c101d 50%, #08111a 100%);
   font-family: var(--font);
   font-synthesis: none;
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #060810;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  border: 2px solid #060810;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 * {

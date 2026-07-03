@@ -11,6 +11,7 @@ import type { AuthenticatedRequest } from '../middleware/authenticate.js';
  * ARCHITECTURE: CONTROLLER LAYER
  * Purpose: Validate DTOs, call services, and shape HTTP responses.
  */
+
 export class AuthController implements IAuthController {
   constructor(
     private readonly _service: IAuthService,

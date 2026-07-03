@@ -25,7 +25,7 @@ export class MongoUserRepository implements IUserRepository {
       createdAt: doc.createdAt ? doc.createdAt.toISOString() : new Date().toISOString()
     };
   }
-
+  
   async findAll(): Promise<UserRecord[]> {
     const docs = await User.find({});
     return docs.map((doc) => this.mapToUserRecord(doc));

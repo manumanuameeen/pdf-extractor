@@ -40,6 +40,7 @@ export class PdfRepository extends JsonFileRepository<PdfRecord> implements IPdf
     
     // We'll use a hack for now: clear the file and save the filtered list
     // (Better: implement delete in JsonFileRepository)
+    
     const fs = await import('node:fs/promises');
     await fs.writeFile(path.join(process.cwd(), 'data', 'pdfs.json'), JSON.stringify(filtered, null, 2));
     return true;
