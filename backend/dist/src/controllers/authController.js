@@ -4,10 +4,6 @@ exports.AuthController = void 0;
 const messages_js_1 = require("../constants/messages.js");
 const statusCodes_js_1 = require("../constants/statusCodes.js");
 const responseSender_js_1 = require("../utils/responseSender.js");
-/**
- * ARCHITECTURE: CONTROLLER LAYER
- * Purpose: Validate DTOs, call services, and shape HTTP responses.
- */
 class AuthController {
     _service;
     _validator;
@@ -20,6 +16,16 @@ class AuthController {
             const dto = this._validator.validateSignup(req.body);
             const result = await this._service.signup(dto);
             (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.CREATED, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    };
+    login = async (req, res, next) => {
+        try {
+            const dto = this._validator.validateLogin(req.body);
+            const result = await this._service.login(dto);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
         }
         catch (error) {
             next(error);
@@ -45,65 +51,15 @@ class AuthController {
             next(error);
         }
     };
-    login = async (req, res, next) => {
-        try {
-            const dto = this._validator.validateLogin(req.body);
-            const result = await this._service.login(dto);
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
-        }
-        catch (error) {
-            next(error);
-        }
-    };
-    refreshToken = async (req, res, next) => {
-        try {
-            const dto = this._validator.validateRefreshToken(req.body);
-            const result = await this._service.refreshToken(dto);
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
-        }
-        catch (error) {
-            next(error);
-        }
-    };
-    forgotPassword = async (req, res, next) => {
-        try {
-            const dto = this._validator.validateForgotPassword(req.body);
-            const result = await this._service.forgotPassword(dto);
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
-        }
-        catch (error) {
-            next(error);
-        }
-    };
-    resetPassword = async (req, res, next) => {
-        try {
-            const dto = this._validator.validateResetPassword(req.body);
-            const result = await this._service.resetPassword(dto);
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
-        }
-        catch (error) {
-            next(error);
-        }
-    };
     updateProfile = async (req, res, next) => {
         try {
-            const dto = this._validator.validateUpdateProfile(req.body);
+            const body = req.body;
             const profilePhotoUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-            const result = await this._service.updateProfile(req.user.userId, {
-                ...dto,
+            const user = await this._service.updateProfile(req.user.userId, {
+                name: body.name,
                 profilePhotoUrl
             });
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, { user: result });
-        }
-        catch (error) {
-            next(error);
-        }
-    };
-    changePassword = async (req, res, next) => {
-        try {
-            const dto = this._validator.validateChangePassword(req.body);
-            const result = await this._service.changePassword(req.user.userId, dto);
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, result);
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, { user });
         }
         catch (error) {
             next(error);

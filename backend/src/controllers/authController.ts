@@ -6,18 +6,18 @@ import type { AuthenticatedRequest } from '../middleware/authenticate.js';
 import { sendError, sendSuccess } from '../utils/responseSender.js';
 import type { AuthService } from '../services/authService.js';
 import type { PublicUser } from '../types/models.js';
+import type { IAuthDtoValidator } from '../contracts/validators.js';
 
 export class AuthController {
-  constructor(private readonly _service: AuthService) {}
+  constructor(
+    private readonly _service: AuthService,
+    private readonly _validator: IAuthDtoValidator
+  ) {}
 
   signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { name, email } = req.body;
-      if (!name || !email) {
-        sendError(res, STATUS_CODES.BAD_REQUEST, 'Name and email are required');
-        return;
-      }
-      const result = await this._service.signup({ name, email });
+      const dto = this._validator.validateSignup(req.body);
+      const result = await this._service.signup(dto);
       sendSuccess(res, STATUS_CODES.CREATED, result);
     } catch (error) {
       next(error);
@@ -26,12 +26,8 @@ export class AuthController {
 
   login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { email } = req.body;
-      if (!email) {
-        sendError(res, STATUS_CODES.BAD_REQUEST, 'Email is required');
-        return;
-      }
-      const result = await this._service.login({ email });
+      const dto = this._validator.validateLogin(req.body);
+      const result = await this._service.login(dto);
       sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
@@ -40,12 +36,8 @@ export class AuthController {
 
   verifyOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { email, otp } = req.body;
-      if (!email || !otp) {
-        sendError(res, STATUS_CODES.BAD_REQUEST, 'Email and OTP are required');
-        return;
-      }
-      const result = await this._service.verifyOtp({ email, otp });
+      const dto = this._validator.validateVerifyOtp(req.body);
+      const result = await this._service.verifyOtp(dto);
       sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);
@@ -54,12 +46,8 @@ export class AuthController {
 
   resendOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { email } = req.body;
-      if (!email) {
-        sendError(res, STATUS_CODES.BAD_REQUEST, 'Email is required');
-        return;
-      }
-      const result = await this._service.resendOtp({ email });
+      const dto = this._validator.validateResendOtp(req.body);
+      const result = await this._service.resendOtp(dto);
       sendSuccess(res, STATUS_CODES.OK, result);
     } catch (error) {
       next(error);

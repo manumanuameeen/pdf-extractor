@@ -8,7 +8,7 @@ const pdfModel_js_1 = __importDefault(require("../models/pdfModel.js"));
 class MongoPdfRepository {
     mapToPdfRecord(doc) {
         return {
-            id: doc._id,
+            id: doc._id || doc.id,
             userId: doc.userId,
             originalName: doc.originalName,
             size: doc.size,
@@ -29,6 +29,10 @@ class MongoPdfRepository {
         const doc = await pdfModel_js_1.default.findOne({ _id: id, userId });
         return doc ? this.mapToPdfRecord(doc) : null;
     }
+    async findByUserId(userId) {
+        const docs = await pdfModel_js_1.default.find({ userId }).sort({ createdAt: -1 });
+        return docs.map(doc => this.mapToPdfRecord(doc));
+    }
     async save(record) {
         const doc = {
             _id: record.id,
@@ -40,6 +44,10 @@ class MongoPdfRepository {
         };
         await pdfModel_js_1.default.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
         return record;
+    }
+    async delete(id) {
+        const result = await pdfModel_js_1.default.deleteOne({ _id: id });
+        return result.deletedCount > 0;
     }
 }
 exports.MongoPdfRepository = MongoPdfRepository;

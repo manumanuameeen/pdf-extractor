@@ -60,6 +60,7 @@ class AppFactory {
     _errorHandler = new ErrorHandlerMiddleware();
     create() {
         const app = (0, express_1.default)();
+        app.set('trust proxy', 1);
         this.ensureStorage();
         this.registerMiddleware(app);
         this.registerRoutes(app);

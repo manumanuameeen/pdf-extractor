@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticate = exports.AuthenticationMiddleware = void 0;
 const messages_js_1 = require("../constants/messages.js");
 const statusCodes_js_1 = require("../constants/statusCodes.js");
-const container_js_1 = require("../di/container.js");
 const responseSender_js_1 = require("../utils/responseSender.js");
+const container_js_1 = require("../di/container.js");
 /**
  * ARCHITECTURE: AUTH MIDDLEWARE CLASS
  * Purpose: Keep JWT extraction and verification separate from routes/controllers.
@@ -26,7 +26,8 @@ class AuthenticationMiddleware {
             req.user = payload;
             next();
         }
-        catch {
+        catch (err) {
+            console.error('JWT token verification failed:', err);
             (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.UNAUTHORIZED, messages_js_1.AUTH_MESSAGES.INVALID_TOKEN);
         }
     };

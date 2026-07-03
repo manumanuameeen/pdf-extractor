@@ -21,5 +21,7 @@ exports.AUTH_ROUTES = {
 exports.PDF_ROUTES = {
     UPLOAD: '/upload',
     BY_ID: '/:id',
-    EXTRACT: '/:id/extract'
+    EXTRACT: '/:id/extract',
+    LIST: '/',
+    DELETE: '/:id'
 };

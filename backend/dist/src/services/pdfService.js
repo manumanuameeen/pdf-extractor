@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PdfService = void 0;
 const promises_1 = __importDefault(require("node:fs/promises"));
+const node_crypto_1 = __importDefault(require("node:crypto"));
 const pdf_lib_1 = require("pdf-lib");
 const messages_js_1 = require("../constants/messages.js");
 /**
@@ -12,9 +13,14 @@ const messages_js_1 = require("../constants/messages.js");
  * Purpose: Keep PDF business logic independent from Express HTTP details.
  */
 class PdfService {
+    _repository;
+    constructor(_repository) {
+        this._repository = _repository;
+    }
     /**
      * Extracts selected pages and creates a new PDF.
      * pageIndices are zero-based because pdf-lib uses zero-based page positions.
+     * Supports rearrangement based on the order of indices in the array.
      */
     async extractPages(sourcePath, pageIndices) {
         try {
@@ -22,8 +28,11 @@ class PdfService {
             const sourceBytes = await promises_1.default.readFile(sourcePath);
             const sourcePdf = await pdf_lib_1.PDFDocument.load(sourceBytes);
             const outputPdf = await pdf_lib_1.PDFDocument.create();
-            const copiedPages = await outputPdf.copyPages(sourcePdf, pageIndices);
-            copiedPages.forEach((page) => outputPdf.addPage(page));
+            // Rearrangement happens here: we copy and add pages in the order they appear in pageIndices
+            for (const index of pageIndices) {
+                const [copiedPage] = await outputPdf.copyPages(sourcePdf, [index]);
+                outputPdf.addPage(copiedPage);
+            }
             const pdfBytes = await outputPdf.save();
             return Buffer.from(pdfBytes);
         }
@@ -55,6 +64,36 @@ class PdfService {
             pageCount: sourcePdf.getPageCount()
         };
     }
+    async savePdfRecord(userId, originalName, size, pageCount, path) {
+        const record = {
+            id: node_crypto_1.default.randomUUID(),
+            userId,
+            originalName,
+            size,
+            pageCount,
+            path,
+            createdAt: new Date().toISOString()
+        };
+        return await this._repository.save(record);
+    }
+    async getUserPdfs(userId) {
+        return await this._repository.findByUserId(userId);
+    }
+    async deleteUserPdf(id, userId) {
+        const pdf = await this._repository.findOwnedByUser(id, userId);
+        if (!pdf) {
+            return false;
+        }
+        try {
+            // Delete physical file
+            await promises_1.default.unlink(pdf.path).catch(() => { });
+            // Delete database record
+            return await this._repository.delete(id);
+        }
+        catch (error) {
+            console.error('Error deleting PDF:', error);
+            return false;
+        }
+    }
 }
 exports.PdfService = PdfService;
-exports.default = new PdfService();

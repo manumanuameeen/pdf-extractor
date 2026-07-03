@@ -9,6 +9,7 @@ const node_path_1 = __importDefault(require("node:path"));
 const node_crypto_1 = __importDefault(require("node:crypto"));
 const multer_1 = __importDefault(require("multer"));
 const express_1 = require("express");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const routes_js_1 = require("../constants/routes.js");
 const config_js_1 = require("../constants/config.js");
 const container_js_1 = require("../di/container.js");
@@ -30,10 +31,13 @@ const profilePhotoUpload = (0, multer_1.default)({
     },
     limits: { fileSize: 5 * 1024 * 1024 }
 });
-/**
- * ARCHITECTURE: ROUTE CLASS
- * Purpose: Register auth endpoints without mixing in controller logic.
- */
+const authRateLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 60 * 1000, // 1 minute
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: { error: 'Too many requests from this IP, please try again after a minute' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 class AuthRoutes {
     _controller;
     _authenticateRequest;
@@ -44,15 +48,11 @@ class AuthRoutes {
         this.registerRoutes();
     }
     registerRoutes() {
-        this.router.post(routes_js_1.AUTH_ROUTES.SIGNUP, this._controller.signup);
-        this.router.post(routes_js_1.AUTH_ROUTES.VERIFY_OTP, this._controller.verifyOtp);
-        this.router.post(routes_js_1.AUTH_ROUTES.RESEND_OTP, this._controller.resendOtp);
-        this.router.post(routes_js_1.AUTH_ROUTES.LOGIN, this._controller.login);
-        this.router.post(routes_js_1.AUTH_ROUTES.REFRESH_TOKEN, this._controller.refreshToken);
-        this.router.post(routes_js_1.AUTH_ROUTES.FORGOT_PASSWORD, this._controller.forgotPassword);
-        this.router.post(routes_js_1.AUTH_ROUTES.RESET_PASSWORD, this._controller.resetPassword);
+        this.router.post(routes_js_1.AUTH_ROUTES.SIGNUP, authRateLimiter, this._controller.signup);
+        this.router.post(routes_js_1.AUTH_ROUTES.LOGIN, authRateLimiter, this._controller.login);
+        this.router.post(routes_js_1.AUTH_ROUTES.VERIFY_OTP, authRateLimiter, this._controller.verifyOtp);
+        this.router.post(routes_js_1.AUTH_ROUTES.RESEND_OTP, authRateLimiter, this._controller.resendOtp);
         this.router.patch(routes_js_1.AUTH_ROUTES.PROFILE, this._authenticateRequest, profilePhotoUpload.single('photo'), this._controller.updateProfile);
-        this.router.patch(routes_js_1.AUTH_ROUTES.CHANGE_PASSWORD, this._authenticateRequest, this._controller.changePassword);
         this.router.get(routes_js_1.AUTH_ROUTES.ME, this._authenticateRequest, this._controller.me);
     }
 }

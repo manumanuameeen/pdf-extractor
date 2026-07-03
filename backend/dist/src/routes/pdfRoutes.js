@@ -28,6 +28,8 @@ class PdfRoutes {
         this.router.post(routes_js_1.PDF_ROUTES.UPLOAD, this._authenticateRequest, this._uploadMiddleware.single('pdf'), this._controller.uploadPdf);
         this.router.get(routes_js_1.PDF_ROUTES.BY_ID, this._authenticateRequest, this._controller.getPdf);
         this.router.post(routes_js_1.PDF_ROUTES.EXTRACT, this._authenticateRequest, this._controller.extractPdfPages);
+        this.router.get(routes_js_1.PDF_ROUTES.LIST, this._authenticateRequest, this._controller.listUserPdfs);
+        this.router.delete(routes_js_1.PDF_ROUTES.DELETE, this._authenticateRequest, this._controller.deletePdf);
     }
 }
 exports.PdfRoutes = PdfRoutes;

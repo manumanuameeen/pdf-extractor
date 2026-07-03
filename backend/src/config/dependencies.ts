@@ -17,6 +17,7 @@ import { CleanupJob } from '../utils/cleanup.js';
 import { DatabaseConnection } from './database.js';
 import { MulterConfig } from './multer.js';
 import type { IUserRepository, IPdfRepository } from '../contracts/repositories.js';
+import authDtoValidator from '../dtos/authDtos.js';
 
 /**
  * ARCHITECTURE: DI COMPOSITION ROOT
@@ -45,7 +46,7 @@ class AppDependencies {
   readonly authService = new AuthService(this.userRepository, this.emailService, this.userMapper);
   readonly pdfService = new PdfService(this.pdfRepository);
 
-  readonly authController = new AuthController(this.authService);
+  readonly authController = new AuthController(this.authService, authDtoValidator);
   readonly pdfController = new PdfController(
     this.pdfService,
     this.pdfRepository,

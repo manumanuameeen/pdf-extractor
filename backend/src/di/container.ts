@@ -6,6 +6,7 @@ import { PdfService } from '../services/pdfService.js';
 import { AuthController } from '../controllers/authController.js';
 import { PdfController } from '../controllers/pdfController.js';
 import pdfDtoValidator from '../dtos/pdfDtos.js';
+import authDtoValidator from '../dtos/authDtos.js';
 import userMapper from '../mappers/userMapper.js';
 import pdfMapper from '../mappers/pdfMapper.js';
 import type { IUserRepository, IPdfRepository } from '../contracts/repositories.js';
@@ -51,7 +52,8 @@ class DIContainer {
 
   get authController(): AuthController {
     this._authController ??= new AuthController(
-      this.authService
+      this.authService,
+      authDtoValidator
     );
     return this._authController;
   }
