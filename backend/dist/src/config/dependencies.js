@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.appDependencies = void 0;
 const authController_js_1 = require("../controllers/authController.js");
@@ -19,6 +22,7 @@ const pdfService_js_1 = require("../services/pdfService.js");
 const cleanup_js_1 = require("../utils/cleanup.js");
 const database_js_1 = require("./database.js");
 const multer_js_1 = require("./multer.js");
+const authDtos_js_1 = __importDefault(require("../dtos/authDtos.js"));
 /**
  * ARCHITECTURE: DI COMPOSITION ROOT
  * Purpose: Build concrete dependencies once and expose fully wired app layers.
@@ -42,7 +46,7 @@ class AppDependencies {
     emailService = new emailService_js_1.EmailService();
     authService = new authService_js_1.AuthService(this.userRepository, this.emailService, this.userMapper);
     pdfService = new pdfService_js_1.PdfService(this.pdfRepository);
-    authController = new authController_js_1.AuthController(this.authService);
+    authController = new authController_js_1.AuthController(this.authService, authDtos_js_1.default);
     pdfController = new pdfController_js_1.PdfController(this.pdfService, this.pdfRepository, this.pdfDtoValidator, this.pdfMapper);
     authenticationMiddleware = new authenticate_js_1.AuthenticationMiddleware(this.authService);
     multerConfig = new multer_js_1.MulterConfig();

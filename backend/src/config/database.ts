@@ -12,8 +12,9 @@ export class DatabaseConnection implements IDatabaseConnection {
     const uri = process.env[DATABASE.URI_ENV];
 
     if (!uri) {
-      console.log(SYSTEM_MESSAGES.DATABASE_SKIPPED);
-      return;
+      console.error(`\n🔴 [Configuration Error]: MONGODB_URI environment variable is missing.`);
+      console.error(`Please define MONGODB_URI in your environment variables to connect to MongoDB.\n`);
+      process.exit(1);
     }
 
     try {
@@ -23,13 +24,15 @@ export class DatabaseConnection implements IDatabaseConnection {
       console.log(SYSTEM_MESSAGES.DATABASE_CONNECTED);
     } catch (error) {
       const message = error instanceof Error ? error.message : SYSTEM_MESSAGES.UNKNOWN_ERROR;
-      console.error(`${SYSTEM_MESSAGES.DATABASE_CONNECTION_FAILED_PREFIX}: ${message}`);
+      console.error(`\n🔴 ${SYSTEM_MESSAGES.DATABASE_CONNECTION_FAILED_PREFIX}: ${message}`);
 
       if (typeof message === 'string' && /ip|whitelist|access|not authorized/i.test(message)) {
         console.error(
-          'Please verify your MongoDB Atlas network access, IP whitelist, cluster credentials, or clear MONGODB_URI to use local JSON storage.'
+          'Please verify your MongoDB Atlas network access, IP whitelist, or cluster credentials.'
         );
       }
+      console.error('Halting execution due to database connection failure.\n');
+      process.exit(1);
     }
   }
 }

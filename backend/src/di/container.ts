@@ -1,5 +1,5 @@
-import { UserRepository } from '../repositories/userRepository.js';
-import { PdfRepository } from '../repositories/pdfRepository.js';
+import { MongoUserRepository } from '../repositories/mongoUserRepository.js';
+import { MongoPdfRepository } from '../repositories/mongoPdfRepository.js';
 import { AuthService } from '../services/authService.js';
 import { EmailService } from '../services/emailService.js';
 import { PdfService } from '../services/pdfService.js';
@@ -22,12 +22,12 @@ class DIContainer {
   private _pdfController?: PdfController;
 
   get userRepository(): IUserRepository {
-    this._userRepository ??= new UserRepository();
+    this._userRepository ??= new MongoUserRepository();
     return this._userRepository;
   }
 
   get pdfRepository(): IPdfRepository {
-    this._pdfRepository ??= new PdfRepository();
+    this._pdfRepository ??= new MongoPdfRepository();
     return this._pdfRepository;
   }
 

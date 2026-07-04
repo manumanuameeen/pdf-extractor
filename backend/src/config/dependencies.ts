@@ -4,8 +4,6 @@ import { PdfDtoValidator } from '../dtos/pdfDtos.js';
 import { PdfMapper } from '../mappers/pdfMapper.js';
 import { UserMapper } from '../mappers/userMapper.js';
 import { AuthenticationMiddleware } from '../middleware/authenticate.js';
-import { PdfRepository } from '../repositories/pdfRepository.js';
-import { UserRepository } from '../repositories/userRepository.js';
 import { MongoPdfRepository } from '../repositories/mongoPdfRepository.js';
 import { MongoUserRepository } from '../repositories/mongoUserRepository.js';
 import { AuthRoutes } from '../routes/authRoutes.js';
@@ -20,22 +18,18 @@ import type { IUserRepository, IPdfRepository } from '../contracts/repositories.
 import authDtoValidator from '../dtos/authDtos.js';
 
 /**
- * ARCHITECTURE: DI COMPOSITION ROOT
- * Purpose: Build concrete dependencies once and expose fully wired app layers.
+ * ARCHITECTURE: DEPENDENCY INJECTION/CONTAINER
+ * Purpose: Manage instantiation and lifetime of all application services.
  */
-class AppDependencies {
+export class AppDependencies {
+  readonly databaseConnection = new DatabaseConnection();
+
   /**
    * PERSISTENCE LAYER CONFIGURATION
-   * 
-   * The backend supports two storage engines: MongoDB (Production/Staging) and JSON file fallback (Local Dev).
-   * Here, we check for the existence of MONGODB_URI in the environment variables:
-   * - If MONGODB_URI exists: We connect to the remote MongoDB instance using Mongoose and use Mongo-based repositories.
-   * - If MONGODB_URI is empty: We fall back to saving/reading data inside the local 'data/' folder using JSON files.
-   * 
-   * Since process.env.MONGODB_URI is defined in .env, MongoDB is used automatically to persist all data.
+   * We exclusively use MongoUserRepository and MongoPdfRepository to enforce MongoDB persistence.
    */
-  readonly userRepository: IUserRepository = process.env.MONGODB_URI ? new MongoUserRepository() : new UserRepository();
-  readonly pdfRepository: IPdfRepository = process.env.MONGODB_URI ? new MongoPdfRepository() : new PdfRepository();
+  readonly userRepository: IUserRepository = new MongoUserRepository();
+  readonly pdfRepository: IPdfRepository = new MongoPdfRepository();
 
   readonly userMapper = new UserMapper();
   readonly pdfMapper = new PdfMapper();
