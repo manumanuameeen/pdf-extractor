@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.container = void 0;
-const userRepository_js_1 = require("../repositories/userRepository.js");
-const pdfRepository_js_1 = require("../repositories/pdfRepository.js");
+const mongoUserRepository_js_1 = require("../repositories/mongoUserRepository.js");
+const mongoPdfRepository_js_1 = require("../repositories/mongoPdfRepository.js");
 const authService_js_1 = require("../services/authService.js");
 const emailService_js_1 = require("../services/emailService.js");
 const pdfService_js_1 = require("../services/pdfService.js");
@@ -24,11 +24,11 @@ class DIContainer {
     _authController;
     _pdfController;
     get userRepository() {
-        this._userRepository ??= new userRepository_js_1.UserRepository();
+        this._userRepository ??= new mongoUserRepository_js_1.MongoUserRepository();
         return this._userRepository;
     }
     get pdfRepository() {
-        this._pdfRepository ??= new pdfRepository_js_1.PdfRepository();
+        this._pdfRepository ??= new mongoPdfRepository_js_1.MongoPdfRepository();
         return this._pdfRepository;
     }
     get emailService() {

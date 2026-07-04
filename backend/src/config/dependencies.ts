@@ -60,7 +60,6 @@ export class AppDependencies {
   ).router;
 
   readonly cleanupJob = new CleanupJob();
-  readonly databaseConnection = new DatabaseConnection();
 }
 
 export const appDependencies = new AppDependencies();

@@ -3,15 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.appDependencies = void 0;
+exports.appDependencies = exports.AppDependencies = void 0;
 const authController_js_1 = require("../controllers/authController.js");
 const pdfController_js_1 = require("../controllers/pdfController.js");
 const pdfDtos_js_1 = require("../dtos/pdfDtos.js");
 const pdfMapper_js_1 = require("../mappers/pdfMapper.js");
 const userMapper_js_1 = require("../mappers/userMapper.js");
 const authenticate_js_1 = require("../middleware/authenticate.js");
-const pdfRepository_js_1 = require("../repositories/pdfRepository.js");
-const userRepository_js_1 = require("../repositories/userRepository.js");
 const mongoPdfRepository_js_1 = require("../repositories/mongoPdfRepository.js");
 const mongoUserRepository_js_1 = require("../repositories/mongoUserRepository.js");
 const authRoutes_js_1 = require("../routes/authRoutes.js");
@@ -24,22 +22,17 @@ const database_js_1 = require("./database.js");
 const multer_js_1 = require("./multer.js");
 const authDtos_js_1 = __importDefault(require("../dtos/authDtos.js"));
 /**
- * ARCHITECTURE: DI COMPOSITION ROOT
- * Purpose: Build concrete dependencies once and expose fully wired app layers.
+ * ARCHITECTURE: DEPENDENCY INJECTION/CONTAINER
+ * Purpose: Manage instantiation and lifetime of all application services.
  */
 class AppDependencies {
+    databaseConnection = new database_js_1.DatabaseConnection();
     /**
      * PERSISTENCE LAYER CONFIGURATION
-     *
-     * The backend supports two storage engines: MongoDB (Production/Staging) and JSON file fallback (Local Dev).
-     * Here, we check for the existence of MONGODB_URI in the environment variables:
-     * - If MONGODB_URI exists: We connect to the remote MongoDB instance using Mongoose and use Mongo-based repositories.
-     * - If MONGODB_URI is empty: We fall back to saving/reading data inside the local 'data/' folder using JSON files.
-     *
-     * Since process.env.MONGODB_URI is defined in .env, MongoDB is used automatically to persist all data.
+     * We exclusively use MongoUserRepository and MongoPdfRepository to enforce MongoDB persistence.
      */
-    userRepository = process.env.MONGODB_URI ? new mongoUserRepository_js_1.MongoUserRepository() : new userRepository_js_1.UserRepository();
-    pdfRepository = process.env.MONGODB_URI ? new mongoPdfRepository_js_1.MongoPdfRepository() : new pdfRepository_js_1.PdfRepository();
+    userRepository = new mongoUserRepository_js_1.MongoUserRepository();
+    pdfRepository = new mongoPdfRepository_js_1.MongoPdfRepository();
     userMapper = new userMapper_js_1.UserMapper();
     pdfMapper = new pdfMapper_js_1.PdfMapper();
     pdfDtoValidator = new pdfDtos_js_1.PdfDtoValidator();
@@ -54,6 +47,6 @@ class AppDependencies {
     authRoutes = new authRoutes_js_1.AuthRoutes(this.authController, this.authenticationMiddleware.handle).router;
     pdfRoutes = new pdfRoutes_js_1.PdfRoutes(this.pdfController, this.authenticationMiddleware.handle, this.upload).router;
     cleanupJob = new cleanup_js_1.CleanupJob();
-    databaseConnection = new database_js_1.DatabaseConnection();
 }
+exports.AppDependencies = AppDependencies;
 exports.appDependencies = new AppDependencies();
