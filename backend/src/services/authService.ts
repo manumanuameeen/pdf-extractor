@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { redis } from '../config/redis.js';
 import type { EmailService } from './emailService.js';
-import type { IUserMapper } from '../contracts/mappers.js';
-import type { IUserRepository } from '../contracts/repositories.js';
+import type { IUserMapper, IUserRepository } from '../contracts/index.js';
 import type { PublicUser, UserRecord, AuthTokenPayload } from '../types/models.js';
 
 export class AuthService {

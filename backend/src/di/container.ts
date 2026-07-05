@@ -9,8 +9,7 @@ import pdfDtoValidator from '../dtos/pdfDtos.js';
 import authDtoValidator from '../dtos/authDtos.js';
 import userMapper from '../mappers/userMapper.js';
 import pdfMapper from '../mappers/pdfMapper.js';
-import type { IUserRepository, IPdfRepository } from '../contracts/repositories.js';
-import type { IPdfService } from '../contracts/services.js';
+import type { IUserRepository, IPdfRepository, IPdfService } from '../contracts/index.js';
 
 class DIContainer {
   private _userRepository?: IUserRepository;

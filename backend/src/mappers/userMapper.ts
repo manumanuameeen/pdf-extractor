@@ -1,4 +1,4 @@
-import type { IUserMapper } from '../contracts/mappers.js';
+import type { IUserMapper } from '../contracts/index.js';
 import type { PublicUser, UserRecord } from '../types/models.js';
 
 export class UserMapper implements IUserMapper {

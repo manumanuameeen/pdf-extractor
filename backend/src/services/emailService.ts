@@ -1,4 +1,6 @@
-export class EmailService {
+import type { IEmailService, SendOtpResult } from '../contracts/index.js';
+
+export class EmailService implements IEmailService {
   private async getAccessToken(): Promise<string> {
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -19,7 +21,7 @@ export class EmailService {
     return data.access_token;
   }
 
-  async sendOtp(to: string, otp: string): Promise<{ delivered: boolean, devMode: boolean }> {
+  async sendOtp(to: string, otp: string): Promise<SendOtpResult> {
     try {
       const accessToken = await this.getAccessToken();
       const userEmail = process.env.GMAIL_USER;
@@ -85,7 +87,7 @@ export class EmailService {
     }
   }
 
-  async sendPasswordResetOtp(to: string, otp: string): Promise<{ delivered: boolean, devMode: boolean }> {
+  async sendPasswordResetOtp(to: string, otp: string): Promise<SendOtpResult> {
     return this.sendOtp(to, otp);
   }
 }

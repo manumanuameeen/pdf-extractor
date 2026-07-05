@@ -1,5 +1,5 @@
 import { PDF_MESSAGES } from '../constants/messages.js';
-import type { IPdfDtoValidator } from '../contracts/validators.js';
+import type { IPdfDtoValidator } from '../contracts/index.js';
 
 export type ExtractPdfPagesDto = {
   pageIndices: number[];

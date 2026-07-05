@@ -5,12 +5,8 @@ import type { NextFunction, Response } from 'express';
 import { STORAGE } from '../constants/config.js';
 import { PDF_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
-import type { ErrorResponseDto, IPdfMapper } from '../contracts/mappers.js';
+import type { ErrorResponseDto, IPdfMapper, IPdfRepository, IPdfService, IPdfDtoValidator, IPdfController } from '../contracts/index.js';
 import { sendError, sendSuccess } from '../utils/responseSender.js';
-import type { IPdfRepository } from '../contracts/repositories.js';
-import type { IPdfService } from '../contracts/services.js';
-import type { IPdfDtoValidator } from '../contracts/validators.js';
-import type { IPdfController } from '../contracts/controllers.js';
 import type { ExtractPdfResponseDto, UploadPdfResponseDto } from '../mappers/pdfMapper.js';
 import type { AuthenticatedRequest } from '../middleware/authenticate.js';
 

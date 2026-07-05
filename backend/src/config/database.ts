@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { DATABASE } from '../constants/config.js';
 import { SYSTEM_MESSAGES } from '../constants/messages.js';
-import type { IDatabaseConnection } from '../contracts/config.js';
+import type { IDatabaseConnection } from '../contracts/index.js';
 
 /**
  * ARCHITECTURE: DATABASE CONFIG CLASS

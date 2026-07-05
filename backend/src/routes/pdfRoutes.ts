@@ -4,7 +4,7 @@ import { container } from '../di/container.js';
 import { authenticate } from '../middleware/authenticate.js';
 import upload from '../config/multer.js';
 import type multer from 'multer';
-import type { IRouteBuilder } from '../contracts/routes.js';
+import { IRouteBuilder } from '../contracts/index.js';
 
 /**
  * ARCHITECTURE: ROUTE CLASS

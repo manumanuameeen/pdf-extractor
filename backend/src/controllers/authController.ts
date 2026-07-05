@@ -1,12 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
-import type { ErrorResponseDto } from '../contracts/mappers.js';
+import type { ErrorResponseDto, IAuthDtoValidator } from '../contracts/index.js';
 import type { AuthenticatedRequest } from '../middleware/authenticate.js';
 import { sendError, sendSuccess } from '../utils/responseSender.js';
 import type { AuthService } from '../services/authService.js';
 import type { PublicUser } from '../types/models.js';
-import type { IAuthDtoValidator } from '../contracts/validators.js';
 
 export class AuthController {
   constructor(

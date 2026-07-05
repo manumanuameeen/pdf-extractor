@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../constants/routes.js';
-import type { IPdfMapper } from '../contracts/mappers.js';
+import type { IPdfMapper } from '../contracts/index.js';
 import type { PdfRecord } from '../types/models.js';
 
 export type UploadedPdfInput = {

@@ -2,8 +2,7 @@ import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import { PDFDocument } from 'pdf-lib';
 import { PDF_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
-import type { IPdfService, PdfMetadata } from '../contracts/services.js';
-import type { IPdfRepository } from '../contracts/repositories.js';
+import type { IPdfService, PdfMetadata, IPdfRepository } from '../contracts/index.js';
 import type { PdfRecord } from '../types/models.js';
 
 /**

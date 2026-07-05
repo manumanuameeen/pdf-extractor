@@ -6,6 +6,7 @@ import { Router, type RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AUTH_ROUTES } from '../constants/routes.js';
 import { STORAGE } from '../constants/config.js';
+import { IRouteBuilder } from '../contracts/index.js';
 import { container } from '../di/container.js';
 import { authenticate } from '../middleware/authenticate.js';
 
@@ -35,7 +36,7 @@ const authRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-export class AuthRoutes {
+export class AuthRoutes implements IRouteBuilder {
   readonly router = Router();
 
   constructor(

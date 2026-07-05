@@ -1,6 +1,6 @@
 import { AUTH_LIMITS } from '../constants/config.js';
 import { AUTH_MESSAGES } from '../constants/messages.js';
-import type { IAuthDtoValidator } from '../contracts/validators.js';
+import type { IAuthDtoValidator } from '../contracts/index.js';
 
 export type SignupDto = {
   name: string;

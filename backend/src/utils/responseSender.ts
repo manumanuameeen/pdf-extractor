@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { ErrorResponseDto } from '../contracts/mappers.js';
+import type { ErrorResponseDto } from '../contracts/index.js';
 
 export const sendSuccess = <T>(res: Response<T>, statusCode: number, body: T): void => {
   res.status(statusCode).json(body);

@@ -4,7 +4,7 @@ import path from 'node:path';
 import multer from 'multer';
 import { FILE_LIMITS, STORAGE } from '../constants/config.js';
 import { PDF_MESSAGES } from '../constants/messages.js';
-import type { IMulterConfig } from '../contracts/config.js';
+import type { IMulterConfig } from '../contracts/index.js';
 
 /**
  * ARCHITECTURE: CONFIG CLASS

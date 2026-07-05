@@ -14,7 +14,7 @@ import { PdfService } from '../services/pdfService.js';
 import { CleanupJob } from '../utils/cleanup.js';
 import { DatabaseConnection } from './database.js';
 import { MulterConfig } from './multer.js';
-import type { IUserRepository, IPdfRepository } from '../contracts/repositories.js';
+import type { IUserRepository, IPdfRepository } from '../contracts/index.js';
 import authDtoValidator from '../dtos/authDtos.js';
 
 /**

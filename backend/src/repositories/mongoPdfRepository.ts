@@ -1,52 +1,44 @@
 import Pdf from '../models/pdfModel.js';
-import type { IPdfRepository } from '../contracts/repositories.js';
+import { MongoBaseRepository } from './mongoBaseRepository.js';
+import type { IPdfRepository } from '../contracts/index.js';
 import type { PdfRecord } from '../types/models.js';
 
-export class MongoPdfRepository implements IPdfRepository {
-  private mapToPdfRecord(doc: any): PdfRecord {
-    return {
-      id: doc._id || doc.id,
-      userId: doc.userId,
-      originalName: doc.originalName,
-      size: doc.size,
-      pageCount: doc.pageCount,
-      path: doc.path,
-      createdAt: doc.createdAt ? doc.createdAt.toISOString() : new Date().toISOString()
-    };
-  }
+function mapToPdfRecord(doc: any): PdfRecord {
+  return {
+    id: doc._id || doc.id,
+    userId: doc.userId,
+    originalName: doc.originalName,
+    size: doc.size,
+    pageCount: doc.pageCount,
+    path: doc.path,
+    createdAt: doc.createdAt ? doc.createdAt.toISOString() : new Date().toISOString()
+  };
+}
 
-  async findAll(): Promise<PdfRecord[]> {
-    const docs = await Pdf.find({});
-    return docs.map((doc) => this.mapToPdfRecord(doc));
-  }
+function mapToPdfDoc(record: PdfRecord): any {
+  return {
+    _id: record.id,
+    userId: record.userId,
+    originalName: record.originalName,
+    size: record.size,
+    pageCount: record.pageCount,
+    path: record.path
+  };
+}
 
-  async findById(id: string): Promise<PdfRecord | null> {
-    const doc = await Pdf.findById(id);
-    return doc ? this.mapToPdfRecord(doc) : null;
+export class MongoPdfRepository extends MongoBaseRepository<PdfRecord> implements IPdfRepository {
+  constructor() {
+    super(Pdf, mapToPdfRecord, mapToPdfDoc);
   }
 
   async findOwnedByUser(id: string, userId: string): Promise<PdfRecord | null> {
     const doc = await Pdf.findOne({ _id: id, userId });
-    return doc ? this.mapToPdfRecord(doc) : null;
+    return doc ? mapToPdfRecord(doc) : null;
   }
 
   async findByUserId(userId: string): Promise<PdfRecord[]> {
     const docs = await Pdf.find({ userId }).sort({ createdAt: -1 });
-    return docs.map(doc => this.mapToPdfRecord(doc));
-  }
-
-  async save(record: PdfRecord): Promise<PdfRecord> {
-    const doc = {
-      _id: record.id,
-      userId: record.userId,
-      originalName: record.originalName,
-      size: record.size,
-      pageCount: record.pageCount,
-      path: record.path
-    };
-
-    await Pdf.findByIdAndUpdate(record.id, doc, { upsert: true, new: true });
-    return record;
+    return docs.map(doc => mapToPdfRecord(doc));
   }
 
   async delete(id: string): Promise<boolean> {

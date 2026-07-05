@@ -3,7 +3,7 @@ import path from 'node:path';
 import cron from 'node-cron';
 import { CLEANUP } from '../constants/config.js';
 import { SYSTEM_MESSAGES } from '../constants/messages.js';
-import type { ICleanupJob } from '../contracts/config.js';
+import type { ICleanupJob } from '../contracts/index.js';
 import { appDependencies } from '../config/dependencies.js';
 
 /**
