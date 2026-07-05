@@ -126,13 +126,14 @@ export interface IRouteBuilder {
 
 export type AuthResponse = {
   message: string;
-  user: PublicUser;
+  user?: PublicUser;
   token?: string;
   refreshToken?: string;
   devOtp?: string;
   devResetOtp?: string;
   otpExpiresInSeconds?: number;
   resendAvailableInSeconds?: number;
+  requiresVerification?: boolean;
 };
 
 export type PdfMetadata = {

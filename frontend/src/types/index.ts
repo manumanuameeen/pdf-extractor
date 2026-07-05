@@ -40,6 +40,7 @@ export type AuthFlowState = {
   authMode: AuthMode;
   authName: string;
   authEmail: string;
+  authPassword?: string;
   authOtp: string;
   isAuthLoading: boolean;
   otpExpiryTimer: number | null;
@@ -47,6 +48,7 @@ export type AuthFlowState = {
   setAuthMode: (mode: AuthMode) => void;
   setAuthName: (name: string) => void;
   setAuthEmail: (email: string) => void;
+  setAuthPassword?: (password: string) => void;
   setAuthOtp: (otp: string) => void;
   handleSignup: () => Promise<void>;
   handleLogin: () => Promise<void>;

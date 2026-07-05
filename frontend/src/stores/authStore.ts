@@ -19,6 +19,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     authMode: 'login',
     authName: '',
     authEmail: '',
+    authPassword: '',
     authOtp: '',
     isAuthLoading: false,
     otpExpiryTimer: null,
@@ -27,6 +28,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     setAuthMode: (authMode) => set({ authMode }),
     setAuthName: (authName) => set({ authName }),
     setAuthEmail: (authEmail) => set({ authEmail }),
+    setAuthPassword: (authPassword) => set({ authPassword }),
     setAuthOtp: (authOtp) => set({ authOtp }),
 
     initSession: async () => {
@@ -51,10 +53,10 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     },
 
     handleSignup: async () => {
-      const { authName, authEmail } = get()
+      const { authName, authEmail, authPassword } = get()
       set({ isAuthLoading: true })
       try {
-        const res = await signup(authName, authEmail)
+        const res = await signup(authName, authEmail, authPassword)
         set({
           authMode: 'verify',
           otpExpiryTimer: 300,
@@ -72,15 +74,24 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     },
 
     handleLogin: async () => {
-      const { authEmail } = get()
+      const { authEmail, authPassword } = get()
       set({ isAuthLoading: true })
       try {
-        const res = await login(authEmail)
-        set({
-          authMode: 'verify',
-          otpExpiryTimer: 300,
-          resendCooldown: 60,
-        })
+        const res = await login(authEmail, authPassword)
+        if (res.requiresVerification) {
+          set({
+            authMode: 'verify',
+            otpExpiryTimer: 300,
+            resendCooldown: 60,
+          })
+        } else if (res.token && res.user) {
+          localStorage.setItem(STORAGE_KEYS.TOKEN, res.token)
+          set({
+            token: res.token,
+            user: res.user,
+            authPassword: '',
+          })
+        }
         useToastStore.getState().showToast(res.message, 'success')
       } catch (error) {
         const message = isAxiosError(error)
@@ -101,6 +112,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
           set({
             token: res.token,
             user: res.user,
+            authPassword: '',
           })
         }
         useToastStore.getState().showToast(res.message, 'success')
@@ -144,6 +156,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
         authMode: 'login',
         authName: '',
         authEmail: '',
+        authPassword: '',
         authOtp: '',
         otpExpiryTimer: null,
         resendCooldown: null,

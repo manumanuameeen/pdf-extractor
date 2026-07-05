@@ -3,11 +3,13 @@ import { Loader2 } from 'lucide-react'
 type Props = {
   authEmail: string
   setAuthEmail: (email: string) => void
+  authPassword?: string
+  setAuthPassword?: (password: string) => void
   onSubmit: () => Promise<void>
   isLoading: boolean
 }
 
-export function LoginForm({ authEmail, setAuthEmail, onSubmit, isLoading }: Props) {
+export function LoginForm({ authEmail, setAuthEmail, authPassword = '', setAuthPassword, onSubmit, isLoading }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     void onSubmit()
@@ -29,20 +31,34 @@ export function LoginForm({ authEmail, setAuthEmail, onSubmit, isLoading }: Prop
         />
       </label>
 
+      <label className="field">
+        <span>Password</span>
+        <input
+          id="auth-password"
+          type="password"
+          value={authPassword}
+          onChange={(e) => setAuthPassword?.(e.target.value)}
+          placeholder="••••••••"
+          required
+          autoComplete="current-password"
+          disabled={isLoading}
+        />
+      </label>
+
       <button
         id="auth-submit"
         className="primary-button wide"
         type="submit"
-        disabled={isLoading || !authEmail}
+        disabled={isLoading || !authEmail || !authPassword}
         style={{ marginTop: 8 }}
       >
         {isLoading ? (
           <>
             <Loader2 className="spin" size={18} />
-            Sending Code...
+            Signing In...
           </>
         ) : (
-          'Send Verification Code'
+          'Sign In'
         )}
       </button>
     </form>

@@ -5,6 +5,8 @@ type Props = {
   setAuthName: (name: string) => void
   authEmail: string
   setAuthEmail: (email: string) => void
+  authPassword?: string
+  setAuthPassword?: (password: string) => void
   onSubmit: () => Promise<void>
   isLoading: boolean
 }
@@ -14,6 +16,8 @@ export function SignupForm({
   setAuthName,
   authEmail,
   setAuthEmail,
+  authPassword = '',
+  setAuthPassword,
   onSubmit,
   isLoading,
 }: Props) {
@@ -52,11 +56,25 @@ export function SignupForm({
         />
       </label>
 
+      <label className="field" style={{ marginTop: 12 }}>
+        <span>Password</span>
+        <input
+          id="auth-password"
+          type="password"
+          value={authPassword}
+          onChange={(e) => setAuthPassword?.(e.target.value)}
+          placeholder="•••••••• (min 8 characters)"
+          required
+          autoComplete="new-password"
+          disabled={isLoading}
+        />
+      </label>
+
       <button
         id="auth-submit"
         className="primary-button wide"
         type="submit"
-        disabled={isLoading || !authName || !authEmail}
+        disabled={isLoading || !authName || !authEmail || !authPassword}
         style={{ marginTop: 16 }}
       >
         {isLoading ? (
@@ -65,7 +83,7 @@ export function SignupForm({
             Creating Account...
           </>
         ) : (
-          'Create Account & Send Code'
+          'Create Account & Verify'
         )}
       </button>
     </form>

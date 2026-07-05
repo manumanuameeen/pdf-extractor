@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const node_crypto_1 = __importDefault(require("node:crypto"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const messages_js_1 = require("../constants/messages.js");
 const redis_js_1 = require("../config/redis.js");
 class AuthService {
@@ -66,12 +67,23 @@ class AuthService {
     }
     async signup(input) {
         let user = await this._repository.findByEmail(input.email);
-        if (!user) {
+        if (user && user.isVerified) {
+            throw new Error(messages_js_1.AUTH_MESSAGES.EMAIL_EXISTS);
+        }
+        const password = input.password || '';
+        const passwordHash = await bcryptjs_1.default.hash(password, 10);
+        if (user) {
+            // Update unverified user's name/password in case they corrected it
+            user.name = input.name;
+            user.passwordHash = passwordHash;
+            await this._repository.save(user);
+        }
+        else {
             user = {
                 id: node_crypto_1.default.randomUUID(),
                 name: input.name,
                 email: input.email.toLowerCase(),
-                passwordHash: '',
+                passwordHash,
                 isVerified: false,
                 otpHash: null,
                 otpExpiresAt: null,
@@ -81,14 +93,37 @@ class AuthService {
             };
             await this._repository.save(user);
         }
-        return this.requestOtp(user.email);
+        const otpResult = await this.requestOtp(user.email);
+        return {
+            message: messages_js_1.AUTH_MESSAGES.SIGNUP_OTP_SENT,
+            devOtp: otpResult.devOtp,
+        };
     }
     async login(input) {
         const user = await this._repository.findByEmail(input.email);
         if (!user) {
-            throw new Error(messages_js_1.AUTH_MESSAGES.USER_NOT_FOUND);
+            throw new Error(messages_js_1.AUTH_MESSAGES.INVALID_CREDENTIALS);
         }
-        return this.requestOtp(user.email);
+        const password = input.password || '';
+        const isPasswordValid = await bcryptjs_1.default.compare(password, user.passwordHash);
+        if (!isPasswordValid) {
+            throw new Error(messages_js_1.AUTH_MESSAGES.INVALID_CREDENTIALS);
+        }
+        if (!user.isVerified) {
+            // Trigger new OTP send
+            const otpResult = await this.requestOtp(user.email);
+            return {
+                message: messages_js_1.AUTH_MESSAGES.VERIFY_BEFORE_LOGIN,
+                requiresVerification: true,
+                devOtp: otpResult.devOtp,
+            };
+        }
+        const token = this.generateToken(user);
+        return {
+            message: messages_js_1.AUTH_MESSAGES.LOGIN_SUCCESS,
+            user: this._mapper.toPublicUser(user),
+            token,
+        };
     }
     async verifyOtp(input) {
         const lockoutKey = this.getLockoutKey(input.email);

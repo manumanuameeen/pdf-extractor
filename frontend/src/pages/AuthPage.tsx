@@ -10,6 +10,7 @@ export function AuthPage() {
   const authMode = useAuthStore((state) => state.authMode)
   const authName = useAuthStore((state) => state.authName)
   const authEmail = useAuthStore((state) => state.authEmail)
+  const authPassword = useAuthStore((state) => state.authPassword) || ''
   const authOtp = useAuthStore((state) => state.authOtp)
   const isAuthLoading = useAuthStore((state) => state.isAuthLoading)
   const otpExpiryTimer = useAuthStore((state) => state.otpExpiryTimer)
@@ -18,6 +19,7 @@ export function AuthPage() {
   const setAuthMode = useAuthStore((state) => state.setAuthMode)
   const setAuthName = useAuthStore((state) => state.setAuthName)
   const setAuthEmail = useAuthStore((state) => state.setAuthEmail)
+  const setAuthPassword = useAuthStore((state) => state.setAuthPassword)
   const setAuthOtp = useAuthStore((state) => state.setAuthOtp)
 
   const handleSignup = useAuthStore((state) => state.handleSignup)
@@ -72,6 +74,8 @@ export function AuthPage() {
                 <LoginForm
                   authEmail={authEmail}
                   setAuthEmail={setAuthEmail}
+                  authPassword={authPassword}
+                  setAuthPassword={setAuthPassword}
                   onSubmit={handleLogin}
                   isLoading={isAuthLoading}
                 />
@@ -91,6 +95,8 @@ export function AuthPage() {
                   setAuthName={setAuthName}
                   authEmail={authEmail}
                   setAuthEmail={setAuthEmail}
+                  authPassword={authPassword}
+                  setAuthPassword={setAuthPassword}
                   onSubmit={handleSignup}
                   isLoading={isAuthLoading}
                 />

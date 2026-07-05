@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { redis } from '../config/redis.js';
 import type { EmailService } from './emailService.js';
-import type { IUserMapper, IUserRepository } from '../contracts/index.js';
+import type { IUserMapper, IUserRepository, AuthResponse } from '../contracts/index.js';
 import type { PublicUser, UserRecord, AuthTokenPayload } from '../types/models.js';
 
 export class AuthService {
@@ -72,15 +73,27 @@ export class AuthService {
     };
   }
 
-  async signup(input: { email: string; name: string }): Promise<{ message: string; devOtp?: string }> {
+  async signup(input: { email: string; name: string; password?: string }): Promise<AuthResponse> {
     let user = await this._repository.findByEmail(input.email);
     
-    if (!user) {
+    if (user && user.isVerified) {
+      throw new Error(AUTH_MESSAGES.EMAIL_EXISTS);
+    }
+
+    const password = input.password || '';
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    if (user) {
+      // Update unverified user's name/password in case they corrected it
+      user.name = input.name;
+      user.passwordHash = passwordHash;
+      await this._repository.save(user);
+    } else {
       user = {
         id: crypto.randomUUID(),
         name: input.name,
         email: input.email.toLowerCase(),
-        passwordHash: '',
+        passwordHash,
         isVerified: false,
         otpHash: null,
         otpExpiresAt: null,
@@ -91,15 +104,41 @@ export class AuthService {
       await this._repository.save(user);
     }
 
-    return this.requestOtp(user.email);
+    const otpResult = await this.requestOtp(user.email);
+    return {
+      message: AUTH_MESSAGES.SIGNUP_OTP_SENT,
+      devOtp: otpResult.devOtp,
+    };
   }
 
-  async login(input: { email: string }): Promise<{ message: string; devOtp?: string }> {
+  async login(input: { email: string; password?: string }): Promise<AuthResponse> {
     const user = await this._repository.findByEmail(input.email);
     if (!user) {
-      throw new Error(AUTH_MESSAGES.USER_NOT_FOUND);
+      throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
     }
-    return this.requestOtp(user.email);
+
+    const password = input.password || '';
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new Error(AUTH_MESSAGES.INVALID_CREDENTIALS);
+    }
+
+    if (!user.isVerified) {
+      // Trigger new OTP send
+      const otpResult = await this.requestOtp(user.email);
+      return {
+        message: AUTH_MESSAGES.VERIFY_BEFORE_LOGIN,
+        requiresVerification: true,
+        devOtp: otpResult.devOtp,
+      };
+    }
+
+    const token = this.generateToken(user);
+    return {
+      message: AUTH_MESSAGES.LOGIN_SUCCESS,
+      user: this._mapper.toPublicUser(user),
+      token,
+    };
   }
 
   async verifyOtp(input: { email: string; otp: string }): Promise<{ message: string; user: PublicUser; token: string }> {

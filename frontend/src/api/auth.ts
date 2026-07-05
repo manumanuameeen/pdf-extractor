@@ -10,15 +10,16 @@ export type AuthResponse = {
   user?: PublicUser;
   token?: string;
   devOtp?: string;
+  requiresVerification?: boolean;
 };
 
-export async function signup(name: string, email: string): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGNUP, { name, email });
+export async function signup(name: string, email: string, password?: string): Promise<AuthResponse> {
+  const response = await apiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGNUP, { name, email, password });
   return response.data;
 }
 
-export async function login(email: string): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, { email });
+export async function login(email: string, password?: string): Promise<AuthResponse> {
+  const response = await apiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, { email, password });
   return response.data;
 }
 
