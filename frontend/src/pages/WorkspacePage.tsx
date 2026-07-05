@@ -7,39 +7,37 @@ import { LibraryPanel } from '../components/workspace/LibraryPanel'
 import { Toolbar } from '../components/workspace/Toolbar'
 import { EmptyState } from '../components/workspace/EmptyState'
 import { getAssetUrl } from '../utils/formatters'
-import type { PublicUser } from '../types'
-import type { AuthFlowState, PdfWorkspaceState } from '../types'
+import { useAuthStore } from '../stores/authStore'
+import { usePdfStore } from '../stores/pdfStore'
 
-type Props = {
-  user: PublicUser
-  auth: Pick<AuthFlowState, 'handleLogout'>
-  workspace: PdfWorkspaceState
-}
+export function WorkspacePage() {
+  const user = useAuthStore((state) => state.user)
+  const token = useAuthStore((state) => state.token)
+  const handleLogout = useAuthStore((state) => state.handleLogout)
 
-export function WorkspacePage({ user, auth, workspace }: Props) {
-  const {
-    token,
-    uploadedPdf,
-    selectedPages,
-    uploadProgress,
-    isDragging,
-    isUploading,
-    isExtracting,
-    extractedPdf,
-    userPdfs,
-    libraryLoading,
-    handleFileInput,
-    handleDrop,
-    selectAllPages,
-    resetWorkspace,
-    extractPages,
-    togglePage,
-    movePage,
-    clearSelection,
-    setDraggingState,
-    handleSelectLibraryPdf,
-    handleDeleteLibraryPdf,
-  } = workspace
+  const uploadedPdf = usePdfStore((state) => state.uploadedPdf)
+  const selectedPages = usePdfStore((state) => state.selectedPages)
+  const uploadProgress = usePdfStore((state) => state.uploadProgress)
+  const isDragging = usePdfStore((state) => state.isDragging)
+  const isUploading = usePdfStore((state) => state.isUploading)
+  const isExtracting = usePdfStore((state) => state.isExtracting)
+  const extractedPdf = usePdfStore((state) => state.extractedPdf)
+  const userPdfs = usePdfStore((state) => state.userPdfs)
+  const libraryLoading = usePdfStore((state) => state.libraryLoading)
+
+  const handleFileInput = usePdfStore((state) => state.handleFileInput)
+  const handleDrop = usePdfStore((state) => state.handleDrop)
+  const selectAllPages = usePdfStore((state) => state.selectAllPages)
+  const resetWorkspace = usePdfStore((state) => state.resetWorkspace)
+  const extractPages = usePdfStore((state) => state.extractPages)
+  const togglePage = usePdfStore((state) => state.togglePage)
+  const movePage = usePdfStore((state) => state.movePage)
+  const clearSelection = usePdfStore((state) => state.clearSelection)
+  const setDraggingState = usePdfStore((state) => state.setDraggingState)
+  const handleSelectLibraryPdf = usePdfStore((state) => state.handleSelectLibraryPdf)
+  const handleDeleteLibraryPdf = usePdfStore((state) => state.handleDeleteLibraryPdf)
+
+  if (!user) return null
 
   const previewUrl = uploadedPdf ? getAssetUrl(uploadedPdf.previewUrl) : ''
   const downloadUrl = extractedPdf ? getAssetUrl(extractedPdf.downloadUrl) : ''
@@ -64,7 +62,7 @@ export function WorkspacePage({ user, auth, workspace }: Props) {
               <RotateCcw size={17} />New file
             </button>
           )}
-          <button className="ghost-button" type="button" onClick={auth.handleLogout}>
+          <button className="ghost-button" type="button" onClick={handleLogout}>
             <LogOut size={17} />Logout
           </button>
         </div>

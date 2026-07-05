@@ -4,30 +4,26 @@ import { AuthTabs } from '../components/auth/AuthTabs'
 import { LoginForm } from '../components/auth/LoginForm'
 import { SignupForm } from '../components/auth/SignupForm'
 import { OtpVerificationForm } from '../components/auth/OtpVerificationForm'
-import type { AuthFlowState } from '../types'
+import { useAuthStore } from '../stores/authStore'
 
-type Props = {
-  auth: AuthFlowState
-}
+export function AuthPage() {
+  const authMode = useAuthStore((state) => state.authMode)
+  const authName = useAuthStore((state) => state.authName)
+  const authEmail = useAuthStore((state) => state.authEmail)
+  const authOtp = useAuthStore((state) => state.authOtp)
+  const isAuthLoading = useAuthStore((state) => state.isAuthLoading)
+  const otpExpiryTimer = useAuthStore((state) => state.otpExpiryTimer)
+  const resendCooldown = useAuthStore((state) => state.resendCooldown)
 
-export function AuthPage({ auth }: Props) {
-  const {
-    authMode,
-    authName,
-    authEmail,
-    authOtp,
-    isAuthLoading,
-    otpExpiryTimer,
-    resendCooldown,
-    setAuthMode,
-    setAuthName,
-    setAuthEmail,
-    setAuthOtp,
-    handleSignup,
-    handleLogin,
-    handleVerifyOtp,
-    handleResendOtp,
-  } = auth
+  const setAuthMode = useAuthStore((state) => state.setAuthMode)
+  const setAuthName = useAuthStore((state) => state.setAuthName)
+  const setAuthEmail = useAuthStore((state) => state.setAuthEmail)
+  const setAuthOtp = useAuthStore((state) => state.setAuthOtp)
+
+  const handleSignup = useAuthStore((state) => state.handleSignup)
+  const handleLogin = useAuthStore((state) => state.handleLogin)
+  const handleVerifyOtp = useAuthStore((state) => state.handleVerifyOtp)
+  const handleResendOtp = useAuthStore((state) => state.handleResendOtp)
 
   return (
     <main className="app-shell auth-shell">

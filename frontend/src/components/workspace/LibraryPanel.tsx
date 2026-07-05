@@ -1,5 +1,6 @@
 import type { SavedPdf } from '../../types'
 import { LibraryCard } from './LibraryCard'
+import { LibrarySkeleton } from './LibrarySkeleton'
 
 type Props = {
   userName: string
@@ -20,7 +21,7 @@ export function LibraryPanel({ userName, userPdfs, libraryLoading, onLoadPdf, on
       </header>
 
       {libraryLoading ? (
-        <div className="library-empty">Loading your saved PDFs…</div>
+        <LibrarySkeleton />
       ) : userPdfs.length === 0 ? (
         <div className="library-empty">
           No saved PDFs yet. Every uploaded or extracted file appears here once the server stores it.
