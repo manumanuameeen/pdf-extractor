@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 import type { IEmailService, SendOtpResult } from '../contracts/index.js';
+
+// Fix for Render IPv6 ENETUNREACH errors: force Node to resolve IPv4 addresses first
+dns.setDefaultResultOrder('ipv4first');
 
 export class EmailService implements IEmailService {
   private getTransporter() {

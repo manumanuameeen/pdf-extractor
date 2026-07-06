@@ -5,6 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const dns_1 = __importDefault(require("dns"));
+// Fix for Render IPv6 ENETUNREACH errors: force Node to resolve IPv4 addresses first
+dns_1.default.setDefaultResultOrder('ipv4first');
 class EmailService {
     getTransporter() {
         return nodemailer_1.default.createTransport({
