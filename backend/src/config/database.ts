@@ -3,10 +3,7 @@ import { DATABASE } from '../constants/config.js';
 import { SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IDatabaseConnection } from '../contracts/index.js';
 
-/**
- * ARCHITECTURE: DATABASE CONFIG CLASS
- * Purpose: Own MongoDB connection setup without coupling repositories to startup code.
- */
+// connects to mongodb
 export class DatabaseConnection implements IDatabaseConnection {
   async connect(): Promise<void> {
     const uri = process.env[DATABASE.URI_ENV];

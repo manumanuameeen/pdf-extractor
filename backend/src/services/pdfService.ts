@@ -5,10 +5,7 @@ import { PDF_MESSAGES, SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { IPdfService, PdfMetadata, IPdfRepository } from '../contracts/index.js';
 import type { PdfRecord } from '../types/models.js';
 
-/**
- * ARCHITECTURE: SERVICE LAYER
- * Purpose: Keep PDF business logic independent from Express HTTP details.
- */
+// handles pdf business logic
 export class PdfService implements IPdfService {
   constructor(private readonly _repository: IPdfRepository) { }
 

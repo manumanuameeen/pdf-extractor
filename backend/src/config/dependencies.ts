@@ -17,10 +17,7 @@ import { MulterConfig } from './multer.js';
 import type { IUserRepository, IPdfRepository } from '../contracts/index.js';
 import authDtoValidator from '../dtos/authDtos.js';
 
-/**
- * ARCHITECTURE: DEPENDENCY INJECTION/CONTAINER
- * Purpose: Manage instantiation and lifetime of all application services.
- */
+// global dependencies for the application
 export class AppDependencies {
   readonly databaseConnection = new DatabaseConnection();
 

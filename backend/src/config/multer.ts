@@ -6,10 +6,7 @@ import { FILE_LIMITS, STORAGE } from '../constants/config.js';
 import { PDF_MESSAGES } from '../constants/messages.js';
 import type { IMulterConfig } from '../contracts/index.js';
 
-/**
- * ARCHITECTURE: CONFIG CLASS
- * Purpose: Centralize upload storage, limits, and file validation.
- */
+// configures file uploads
 export class MulterConfig implements IMulterConfig {
   createUpload(): multer.Multer {
     return multer({

@@ -6,10 +6,7 @@ import upload from '../config/multer.js';
 import type multer from 'multer';
 import type { IPdfController, IRouteBuilder } from '../contracts/index.js';
 
-/**
- * ARCHITECTURE: ROUTE CLASS
- * Purpose: Register PDF endpoints without mixing in controller logic.
- */
+// registers pdf endpoints
 export class PdfRoutes implements IRouteBuilder {
   readonly router = Router();
 

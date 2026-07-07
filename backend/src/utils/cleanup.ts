@@ -6,11 +6,7 @@ import { SYSTEM_MESSAGES } from '../constants/messages.js';
 import type { ICleanupJob } from '../contracts/index.js';
 import { appDependencies } from '../config/dependencies.js';
 
-/**
- * ARCHITECTURE: CLEANUP JOB CLASS
- * Purpose: Remove "orphan" files that are not tracked in the database.
- * This ensures user-saved PDFs are never deleted, while temp/failed uploads are cleaned.
- */
+// removes orphan files that are not tracked in the database
 export class CleanupJob implements ICleanupJob {
   start(uploadDir: string, outputDir: string): void {
     cron.schedule(CLEANUP.CRON_EVERY_HOUR, async () => {

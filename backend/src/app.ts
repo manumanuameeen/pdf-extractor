@@ -48,10 +48,7 @@ class ErrorHandlerMiddleware {
   }
 }
 
-/**
- * ARCHITECTURE: APP SETUP CLASS
- * Purpose: Configure Express middleware, static assets, routes, jobs, and errors.
- */
+// setup express application
 class AppFactory {
   private readonly _uploadDir = path.join(process.cwd(), process.env[STORAGE.UPLOAD_DIR_ENV] || STORAGE.DEFAULT_UPLOAD_DIR);
   private readonly _outputDir = path.join(process.cwd(), process.env[STORAGE.OUTPUT_DIR_ENV] || STORAGE.DEFAULT_OUTPUT_DIR);

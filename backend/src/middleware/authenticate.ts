@@ -13,10 +13,7 @@ export type AuthenticatedRequest<
   user: AuthTokenPayload;
 };
 
-/**
- * ARCHITECTURE: AUTH MIDDLEWARE CLASS
- * Purpose: Keep JWT extraction and verification separate from routes/controllers.
- */
+// auth middleware class
 export class AuthenticationMiddleware {
   constructor(private readonly _service = container.authService) { }
 
