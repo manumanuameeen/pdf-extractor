@@ -67,16 +67,29 @@ class AuthController {
     };
     me = async (req, res, next) => {
         try {
-            const user = await this._service.getUserById(req.user.userId);
-            if (!user) {
+            const result = await this._service.getUserById(req.user.userId);
+            if (!result) {
                 (0, responseSender_js_1.sendError)(res, statusCodes_js_1.STATUS_CODES.NOT_FOUND, messages_js_1.AUTH_MESSAGES.USER_NOT_FOUND);
                 return;
             }
-            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, { user });
+            (0, responseSender_js_1.sendSuccess)(res, statusCodes_js_1.STATUS_CODES.OK, { user: result });
         }
         catch (error) {
             next(error);
         }
+    };
+    // Not Implemented Yet
+    refreshToken = async (req, res, next) => {
+        (0, responseSender_js_1.sendError)(res, 501, 'Not implemented');
+    };
+    forgotPassword = async (req, res, next) => {
+        (0, responseSender_js_1.sendError)(res, 501, 'Not implemented');
+    };
+    resetPassword = async (req, res, next) => {
+        (0, responseSender_js_1.sendError)(res, 501, 'Not implemented');
+    };
+    changePassword = async (req, res, next) => {
+        (0, responseSender_js_1.sendError)(res, 501, 'Not implemented');
     };
 }
 exports.AuthController = AuthController;

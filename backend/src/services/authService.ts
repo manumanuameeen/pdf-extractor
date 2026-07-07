@@ -4,10 +4,10 @@ import bcrypt from 'bcryptjs';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { redis } from '../config/redis.js';
 import type { EmailService } from './emailService.js';
-import type { IUserMapper, IUserRepository, AuthResponse } from '../contracts/index.js';
+import type { IUserMapper, IUserRepository, AuthResponse, IAuthService } from '../contracts/index.js';
 import type { PublicUser, UserRecord, AuthTokenPayload } from '../types/models.js';
 
-export class AuthService {
+export class AuthService implements IAuthService {
   private readonly JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
   private readonly JWT_EXPIRES_IN = '1d';
   private readonly OTP_TTL = 300; // 5 minutes
@@ -223,5 +223,19 @@ export class AuthService {
   async getUserById(userId: string): Promise<PublicUser | null> {
     const user = await this._repository.findById(userId);
     return user ? this._mapper.toPublicUser(user) : null;
+  }
+
+  // Not Implemented Yet
+  async refreshToken(input: any): Promise<AuthResponse> {
+    throw new Error('Not implemented');
+  }
+  async forgotPassword(input: any): Promise<AuthResponse> {
+    throw new Error('Not implemented');
+  }
+  async resetPassword(input: any): Promise<AuthResponse> {
+    throw new Error('Not implemented');
+  }
+  async changePassword(userId: string, input: any): Promise<AuthResponse> {
+    throw new Error('Not implemented');
   }
 }

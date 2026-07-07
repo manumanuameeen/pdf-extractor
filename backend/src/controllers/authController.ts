@@ -1,13 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AUTH_MESSAGES } from '../constants/messages.js';
 import { STATUS_CODES } from '../constants/statusCodes.js';
-import type { ErrorResponseDto, IAuthDtoValidator } from '../contracts/index.js';
+import type { ErrorResponseDto, IAuthDtoValidator, IAuthController } from '../contracts/index.js';
 import type { AuthenticatedRequest } from '../middleware/authenticate.js';
 import { sendError, sendSuccess } from '../utils/responseSender.js';
 import type { AuthService } from '../services/authService.js';
 import type { PublicUser } from '../types/models.js';
 
-export class AuthController {
+export class AuthController implements IAuthController {
   constructor(
     private readonly _service: AuthService,
     private readonly _validator: IAuthDtoValidator
@@ -77,14 +77,28 @@ export class AuthController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const user = await this._service.getUserById(req.user.userId);
-      if (!user) {
+      const result = await this._service.getUserById(req.user.userId);
+      if (!result) {
         sendError(res, STATUS_CODES.NOT_FOUND, AUTH_MESSAGES.USER_NOT_FOUND);
         return;
       }
-      sendSuccess(res, STATUS_CODES.OK, { user });
+      sendSuccess(res, STATUS_CODES.OK, { user: result });
     } catch (error) {
       next(error);
     }
+  };
+
+  // Not Implemented Yet
+  refreshToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    sendError(res, 501, 'Not implemented');
+  };
+  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    sendError(res, 501, 'Not implemented');
+  };
+  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    sendError(res, 501, 'Not implemented');
+  };
+  changePassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    sendError(res, 501, 'Not implemented');
   };
 }

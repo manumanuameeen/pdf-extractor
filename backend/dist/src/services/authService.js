@@ -192,5 +192,18 @@ class AuthService {
         const user = await this._repository.findById(userId);
         return user ? this._mapper.toPublicUser(user) : null;
     }
+    // Not Implemented Yet
+    async refreshToken(input) {
+        throw new Error('Not implemented');
+    }
+    async forgotPassword(input) {
+        throw new Error('Not implemented');
+    }
+    async resetPassword(input) {
+        throw new Error('Not implemented');
+    }
+    async changePassword(userId, input) {
+        throw new Error('Not implemented');
+    }
 }
 exports.AuthService = AuthService;
