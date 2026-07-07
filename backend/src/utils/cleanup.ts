@@ -20,7 +20,7 @@ export class CleanupJob implements ICleanupJob {
 
         this.deleteOrphanFiles(uploadDir, trackedPaths);
         this.deleteOrphanFiles(outputDir, trackedPaths);
-        
+
         console.log(SYSTEM_MESSAGES.CLEANUP_SUCCESS);
       } catch (error) {
         const message = error instanceof Error ? error.message : SYSTEM_MESSAGES.UNKNOWN_CLEANUP_ERROR;
@@ -41,7 +41,7 @@ export class CleanupJob implements ICleanupJob {
     for (const fileName of fs.readdirSync(directory)) {
       const filePath = path.join(directory, fileName);
       const absolutePath = path.resolve(filePath);
-      
+
       // SKIP if the file is tracked in the database
       if (trackedPaths.has(absolutePath)) {
         continue;

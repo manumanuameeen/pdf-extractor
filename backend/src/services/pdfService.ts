@@ -10,7 +10,7 @@ import type { PdfRecord } from '../types/models.js';
  * Purpose: Keep PDF business logic independent from Express HTTP details.
  */
 export class PdfService implements IPdfService {
-  constructor(private readonly _repository: IPdfRepository) {}
+  constructor(private readonly _repository: IPdfRepository) { }
 
   /**
    * Extracts selected pages and creates a new PDF.
@@ -24,7 +24,7 @@ export class PdfService implements IPdfService {
       const sourceBytes = await fs.readFile(sourcePath);
       const sourcePdf = await PDFDocument.load(sourceBytes);
       const outputPdf = await PDFDocument.create();
-      
+
       // Rearrangement happens here: we copy and add pages in the order they appear in pageIndices
       for (const index of pageIndices) {
         const [copiedPage] = await outputPdf.copyPages(sourcePdf, [index]);
@@ -95,7 +95,7 @@ export class PdfService implements IPdfService {
 
     try {
       // Delete physical file
-      await fs.unlink(pdf.path).catch(() => {});
+      await fs.unlink(pdf.path).catch(() => { });
       // Delete database record
       return await this._repository.delete(id);
     } catch (error) {

@@ -9,10 +9,7 @@ import { STATUS_CODES } from './constants/statusCodes.js';
 import { appDependencies } from './config/dependencies.js';
 import { sendError } from './utils/responseSender.js';
 
-/**
- * ARCHITECTURE: ERROR HANDLER CLASS
- * Purpose: Convert application errors into consistent HTTP responses.
- */
+// converts application errors into consistent http responses
 class ErrorHandlerMiddleware {
   handle: ErrorRequestHandler = (err, _req, res, next) => {
     if (res.headersSent) {

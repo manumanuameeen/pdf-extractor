@@ -4,7 +4,7 @@ import { container } from '../di/container.js';
 import { authenticate } from '../middleware/authenticate.js';
 import upload from '../config/multer.js';
 import type multer from 'multer';
-import { IRouteBuilder } from '../contracts/index.js';
+import type { IPdfController, IRouteBuilder } from '../contracts/index.js';
 
 /**
  * ARCHITECTURE: ROUTE CLASS
@@ -14,7 +14,7 @@ export class PdfRoutes implements IRouteBuilder {
   readonly router = Router();
 
   constructor(
-    private readonly _controller = container.pdfController,
+    private readonly _controller: IPdfController = container.pdfController,
     private readonly _authenticateRequest: RequestHandler = authenticate,
     private readonly _uploadMiddleware: multer.Multer = upload
   ) {

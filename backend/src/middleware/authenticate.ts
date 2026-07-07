@@ -18,7 +18,7 @@ export type AuthenticatedRequest<
  * Purpose: Keep JWT extraction and verification separate from routes/controllers.
  */
 export class AuthenticationMiddleware {
-  constructor(private readonly _service = container.authService) {}
+  constructor(private readonly _service = container.authService) { }
 
   handle: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
@@ -31,7 +31,7 @@ export class AuthenticationMiddleware {
     try {
       const token = authHeader.replace('Bearer ', '').trim();
       const payload = this._service.verifyToken(token);
-      
+
       (req as AuthenticatedRequest).user = payload;
       next();
     } catch (err) {

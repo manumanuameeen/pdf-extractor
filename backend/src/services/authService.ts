@@ -16,7 +16,7 @@ export class AuthService implements IAuthService {
     private readonly _repository: IUserRepository,
     private readonly _emailService: EmailService,
     private readonly _mapper: IUserMapper
-  ) {}
+  ) { }
 
   private generateOtp(): string {
     return crypto.randomInt(100000, 999999).toString();
@@ -39,12 +39,12 @@ export class AuthService implements IAuthService {
 
     const redisKey = this.getRedisKey(email);
     const existingStr = await redis.get(redisKey);
-    
+
     let resendCount = 0;
     if (existingStr) {
       const existing = JSON.parse(existingStr);
       resendCount = existing.resend_count || 0;
-      
+
       if (resendCount >= 3) {
         // Block for 1 hour
         await redis.set(lockoutKey, 'true', 'EX', 3600);
@@ -62,7 +62,7 @@ export class AuthService implements IAuthService {
     };
 
     await redis.set(redisKey, JSON.stringify(payload), 'EX', this.OTP_TTL);
-    
+
     await this._emailService.sendOtp(email, code);
 
     // Development helper
@@ -75,7 +75,7 @@ export class AuthService implements IAuthService {
 
   async signup(input: { email: string; name: string; password?: string }): Promise<AuthResponse> {
     let user = await this._repository.findByEmail(input.email);
-    
+
     if (user && user.isVerified) {
       throw new Error(AUTH_MESSAGES.EMAIL_EXISTS);
     }
@@ -171,7 +171,7 @@ export class AuthService implements IAuthService {
 
     // Success!
     await redis.del(redisKey);
-    
+
     const user = await this._repository.findByEmail(input.email);
     if (!user) throw new Error(AUTH_MESSAGES.USER_NOT_FOUND);
 

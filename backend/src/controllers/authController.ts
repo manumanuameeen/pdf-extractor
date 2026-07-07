@@ -11,7 +11,7 @@ export class AuthController implements IAuthController {
   constructor(
     private readonly _service: AuthService,
     private readonly _validator: IAuthDtoValidator
-  ) {}
+  ) { }
 
   signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

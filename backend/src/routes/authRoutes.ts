@@ -6,7 +6,7 @@ import { Router, type RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AUTH_ROUTES } from '../constants/routes.js';
 import { STORAGE } from '../constants/config.js';
-import { IRouteBuilder } from '../contracts/index.js';
+import type { IAuthController, IRouteBuilder } from '../contracts/index.js';
 import { container } from '../di/container.js';
 import { authenticate } from '../middleware/authenticate.js';
 
@@ -40,7 +40,7 @@ export class AuthRoutes implements IRouteBuilder {
   readonly router = Router();
 
   constructor(
-    private readonly _controller = container.authController,
+    private readonly _controller: IAuthController = container.authController,
     private readonly _authenticateRequest: RequestHandler = authenticate
   ) {
     this.registerRoutes();

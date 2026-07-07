@@ -17,7 +17,7 @@ export class PdfController implements IPdfController {
     private readonly _repository: IPdfRepository,
     private readonly _validator: IPdfDtoValidator,
     private readonly _mapper: IPdfMapper
-  ) {}
+  ) { }
 
   uploadPdf = async (
     req: AuthenticatedRequest,
@@ -60,7 +60,7 @@ export class PdfController implements IPdfController {
 
       const dto = this._validator.validateExtractPages(req.body);
       const extractedPdf = await this._service.extractPages(pdfRecord.path, dto.pageIndices);
-      
+
       const outputFileName = `${crypto.randomUUID()}${STORAGE.EXTRACTED_SUFFIX}`;
       const outputPath = this._getOutputPath(outputFileName);
 
